@@ -1,10 +1,10 @@
 // ============================================================================
-// Copyright (C) PRIMULA. All rights reserved.
+// Copyright (C) PRIMULA++. All rights reserved.
 //
 // Authors: Denis Cohen-Corticchiato (DOHCC)
 // Email:   denis.cohen@gmail.com
 //
-// This file is part of PRIMULA  
+// This file is part of PRIMULA++  
 // ============================================================================
 
 #include <stdio.h>
@@ -27,7 +27,7 @@
 #include <boost/math/special_functions/ellint_2.hpp>
 #include <boost/math/distributions/triangular.hpp>
 
-#include "primula.hpp"
+#include "primula++.hpp"
 //#include "raster_functions.hpp"
 #include "random_number_generator.hpp"
 //#include "tree.hpp"

@@ -1,4 +1,4 @@
-# README FILE FOR PRIMULA
+# README FILE FOR PRIMULA++
 
 ## Needed boost libraries
 

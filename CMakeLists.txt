@@ -13,10 +13,10 @@ include_directories(src)
 # PRIMULA
 #==============================================================================
 add_executable(
-    PRIMULA 
+    PRIMULA++ 
     src/main.cpp 
-    src/primula.cpp
+    src/primula++.cpp
 )
 
-target_link_libraries(PRIMULA OpenMP::OpenMP_CXX)
+target_link_libraries(PRIMULA++ OpenMP::OpenMP_CXX)
 
