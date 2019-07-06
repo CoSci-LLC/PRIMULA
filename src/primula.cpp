@@ -1,10 +1,10 @@
 // ============================================================================
-// Copyright (C) SlideforMAP++. All rights reserved.
+// Copyright (C) PRIMULA. All rights reserved.
 //
 // Authors: Denis Cohen-Corticchiato (DOHCC)
 // Email:   denis.cohen@gmail.com
 //
-// This file is part of SlideforMAP++  
+// This file is part of PRIMULA  
 // ============================================================================
 
 #include <stdio.h>
@@ -15,6 +15,8 @@
 #include <iomanip>
 #include <chrono>
 #include <vector>
+#include <string>
+#include <sstream>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
@@ -23,23 +25,31 @@
 #include <boost/math/distributions/inverse_gamma.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
+#include <boost/math/distributions/triangular.hpp>
 
-#include "slideformap.hpp"
-#include "raster_functions.hpp"
+#include "primula.hpp"
+//#include "raster_functions.hpp"
 #include "random_number_generator.hpp"
-#include "tree.hpp"
+//#include "tree.hpp"
 
-SlideforMap::SlideforMap()
+Primula::Primula()
 {
 }
 
-SlideforMap::~SlideforMap()
+Primula::~Primula()
 {
 }
 
-bool SlideforMap::TreeRead(const std::string & file)
+bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landslides)
 {
-   std::cout << "SlideforMap:TreeRead \"" << file << "\"" << std::endl;
+// ------------------------------------------------------
+// ... Uniform random number generator for landslides ...
+// ------------------------------------------------------
+   boost::mt19937 rng;                // Always same sequence for the moment
+ //boost::mt19937 rng(std::time(0));  // Randomise generator
+   static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
+
+   std::cout << "Primula:ReadCSV \"" << file << "\"" << std::endl;
 
    // Open data file
    std::ifstream fin;
@@ -50,19 +60,81 @@ bool SlideforMap::TreeRead(const std::string & file)
       return false;
    }
 
-   double x, y, dbh;
+   std::string line;
+   std::string word;
+   int cod_pos, prof_pos, cod, prof;
 
-   while (fin >> x >> y >> dbh)
+   int count = 0;
+   getline(fin, line);
+   std::stringstream ss(line);
+   while (ss.good())
    {
-      trees_.push_back(Tree(x,y,dbh));
+      getline(ss,word,',');
+      if (word == "COD_UTS1") cod_pos = count;
+      else if (word == "PROF_UTILE") prof_pos = count;
+      count++;
    }
 
-   std::cout << "SlideforMap:TreeRead ... Done" << std::endl;
+   while (getline(fin, line))
+   {
+      count = 0;
+      bool quote = false;
+      std::vector<char> cstr(line.c_str(), line.c_str() + line.size() + 1);
+      std::ostringstream out;
+      for (char c: cstr){
+         if (c == '"')
+         {
+            if (quote)
+            {
+               std::string s(out.str());
+               if (s != "")
+               {
+                  if (count == cod_pos) std::stringstream(s) >> cod;
+                  else if (count == prof_pos) std::stringstream(s) >> prof;
+                  count++;
+               }
+               quote = false;
+               out.str("");
+               out.clear();
+            } else quote = true;
+         } else if ((c == ',' && !quote) || c == '\n')
+         {
+            std::string s(out.str());
+            if (s != "")
+            {
+               if (count == cod_pos) std::stringstream(s) >> cod;
+               else if (count == prof_pos) std::stringstream(s) >> prof;
+               count++;
+            }
+            out.str("");
+            out.clear();
+         } else out << c;
+      }
+
+      if (std::find(soil_id_.begin(), soil_id_.end(), cod)==soil_id_.end())
+      {
+         soil_id_.push_back(cod);
+         double max_z = prof/100.0;
+         max_z_.push_back(max_z);
+
+         std::vector<double> rand;
+         boost::math::triangular_distribution<> tri(2/3*max_z,3/4*max_z,max_z);
+
+         for (auto i = 0; i < num_landslides; i++)
+         {
+            rand.push_back(quantile(tri, rng_uniform_01()));
+         }
+         z_.push_back(rand);
+      }
+   }
+   
+
+   std::cout << "Primula:ReadCSV ... Done" << std::endl;
    fin.close();
    return true;
 }
 
-void SlideforMap::GenerateLandslides(const unsigned int & num_landslides)
+/*void Primula::GenerateLandslides(const unsigned int & num_landslides)
 {
    landslide_.resize(num_landslides);
 
@@ -202,7 +274,7 @@ void SlideforMap::GenerateLandslides(const unsigned int & num_landslides)
    std::cout << "Bi-linear interpolation elapsed time: " << elapsed_bli.count() << " s\n";
 
    // Print to file
-   std::string filename = "ls.xyz.dat";
+   std::std::string filename = "ls.xyz.dat";
 // std::ofstream fout;
    fout.open(filename);
    fout << std::fixed << std::setprecision(4);
@@ -270,7 +342,7 @@ void SlideforMap::GenerateLandslides(const unsigned int & num_landslides)
 
 }
 
-void SlideforMap::AddTrees(const std::string & file)
+void Primula::AddTrees(const std::std::string & file)
 {
 // -----------------------------------------------------
 // ... Inverse gamma distribution for root basal ...
@@ -317,7 +389,7 @@ void SlideforMap::AddTrees(const std::string & file)
    std::cout << "Tree adding elapsed time: " << elapsed_trees.count() << " s\n";
 }
 
-void SlideforMap::FindFOS()
+void Primula::FindFOS()
 {
 // -----------------------------------------------------
 // ... Inverse gamma distribution for root basal ...
@@ -337,4 +409,4 @@ void SlideforMap::FindFOS()
       auto Fr = Fr_basal + Fr_lateral;
       it.fos_ = Fr / Fd_parallel;
    }
-}
+}*/

@@ -7,8 +7,8 @@
 // This file is part of PRIMULA  
 // ============================================================================
 
-#ifndef PRIMULA_HPP 
-#define PRIMULA_HPP 
+#ifndef SOIL_HPP 
+#define SOIL_HPP 
 
 #include <iostream>
 #include <fstream>
@@ -20,9 +20,9 @@
 #include <stdio.h>
 #include <math.h>
 
-//#include "raster.hpp"
-//#include "landslide.hpp"
-//#include "tree.hpp"
+#include "raster.hpp"
+#include "landslide.hpp"
+#include "tree.hpp"
 
 class Primula
 {
@@ -31,9 +31,9 @@ class Primula
    //==========================================================================
    // ... Constructors, Destructors ...
    //==========================================================================
-      Primula();
+      Soil();
 
-      ~Primula();
+      ~Soil();
 
    //==========================================================================
    // ... Public Accessor Functions ...
@@ -43,9 +43,9 @@ class Primula
    //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
-      //void GenerateLandslides(const unsigned int & num_landslides);
-      bool ReadCSV(const std::string & file, const unsigned int & num_landslides);
-      //void FindFOS();
+      void GenerateLandslides(const unsigned int & num_landslides);
+      void AddTrees(const std::string & file);
+      void FindFOS();
 
       // ... Static Member Data ...
       static constexpr double gravity_ = 9.81;                  // [m/s^2]
@@ -55,14 +55,11 @@ class Primula
 
  
       // ... Member Data ...
-      //Raster dem_;
-      //Raster twi_;
-      //Raster slope_;
-      //std::vector<Landslide> landslide_;
-      //std::vector<Tree> trees_;
-      std::vector<int> soil_id_;
-      std::vector<double> max_z_;
-      std::vector<std::vector<double>> z_;
+      Raster dem_;
+      Raster twi_;
+      Raster slope_;
+      std::vector<Landslide> landslide_;
+      std::vector<Tree> trees_;
       double veg_weight_ = 70.0;  // [kg/m2]
       
       // Inverse Gamma distribution parameters
@@ -91,10 +88,9 @@ class Primula
    //==========================================================================
 
    private:
-      //bool TreeRead(const std::string & file);
+      bool TreeRead(const std::string & file);
 
 };
 
 #endif
-
 
