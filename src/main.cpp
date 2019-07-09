@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
    Primula primula;
    primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv",1000);
-   primula.GenerateLandslides(1000);
+   primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv",1000);
 
    return EXIT_SUCCESS;
 }

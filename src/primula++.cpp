@@ -130,14 +130,13 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
          z_.push_back(rand);
       }
    }
-   
 
-   std::cout << "Primula:ReadCSV ... Done" << std::endl;
    fin.close();
+   std::cout << "Primula:ReadCSV ... Done" << std::endl;
    return true;
 }
 
-void Primula::GenerateLandslides(const unsigned int & num_landslides)
+bool Primula::GenerateLandslides(const std::string & file, const unsigned int & num_landslides)
 {
    //landslide_.resize(num_landslides);
 
@@ -153,6 +152,8 @@ void Primula::GenerateLandslides(const unsigned int & num_landslides)
    boost::math::uniform_distribution<> rng_phi2(35,40);
    boost::math::uniform_distribution<> rng_gamma(17,19);
    boost::math::uniform_distribution<> rng_ks(0.5,100);
+   boost::math::uniform_distribution<> rng_cr_grass(5,7.5);
+   boost::math::uniform_distribution<> rng_cr_shrub(0,15);
 
 /*
 // -----------------------------------------------------
@@ -213,6 +214,56 @@ void Primula::GenerateLandslides(const unsigned int & num_landslides)
 // ----------------------------------------------
    auto start_rng = std::chrono::high_resolution_clock::now(); // Time loop
    
+   // Open data file
+   std::ifstream fin;
+   fin.open(file);
+   if (!fin.is_open())
+   {
+      std::cerr << "  File \"" + file + "\" open failed" << std::endl;
+      return false;
+   }
+
+   auto count = 0;
+   unsigned int Fs200_pos, Fs800_pos, Pa200_pos, Pa400_pos, Mf300_pos, Mf600_pos, Cs150_pos;
+   std::vector<double> Fs200, Fs800, Pa200, Pa400, Mf600, Mf300, Cs150;
+   std::string line, word;
+
+   getline(fin, line);
+   std::stringstream ss(line);
+   while (ss.good())
+   {
+      getline(ss,word,',');
+      word.erase(std::remove_if(word.begin(),word.end(),
+         [](auto const & c) -> bool {return !std::isalnum(c);}),word.end());
+      
+      if (word == "Pa400") Pa400_pos = count;
+      else if (word == "Pa200") Pa200_pos = count;
+      else if (word == "Fs800") Fs800_pos = count;
+      else if (word == "Fs200") Fs200_pos = count;
+      else if (word == "Cs150") Cs150_pos = count;
+      else if (word == "MF600") Mf600_pos = count;
+      else if (word == "MF300") Mf300_pos = count;
+      count++;
+   }
+
+   while (getline(fin, line))
+   {
+      count = 0;
+      std::stringstream ss(line);
+      while (ss.good())
+      {
+         getline(ss,word,',');
+         if (count == Pa400_pos) Pa400.push_back(std::stod(word));
+         else if (count == Pa200_pos) Pa200.push_back(std::stod(word));
+         else if (count == Fs800_pos) Fs800.push_back(std::stod(word));
+         else if (count == Fs200_pos) Fs200.push_back(std::stod(word));
+         else if (count == Cs150_pos) Cs150.push_back(std::stod(word));
+         else if (count == Mf600_pos) Mf600.push_back(std::stod(word));
+         else if (count == Mf300_pos) Mf300.push_back(std::stod(word));
+         count++;
+      }
+   }
+
    std::vector<std::vector<double>> phi;
    std::vector<std::vector<double>> gamma;
    std::vector<std::vector<double>> ks;
@@ -237,6 +288,18 @@ void Primula::GenerateLandslides(const unsigned int & num_landslides)
       slide.width_ = sqrt(slide.area_ / l2w);
       slide.length_ = slide.width_ * l2w;
       landslide_.push_back(slide);
+
+      auto n = rand() % Pa200.size();
+      Crl_Fs200_.push_back(Fs200.at(n));
+      Crl_Fs800_.push_back(Fs800.at(n));
+      Crl_Pa200_.push_back(Pa200.at(n));
+      Crl_Pa400_.push_back(Pa400.at(n));
+      Crl_Mf300_.push_back(Mf300.at(n));
+      Crl_Mf600_.push_back(Mf600.at(n));
+      Crl_Cs150_.push_back(Cs150.at(n));
+
+      Cr_grassland_.push_back(quantile(rng_cr_grass,rng_uniform_01()));
+      Cr_shrubland_.push_back(quantile(rng_cr_shrub,rng_uniform_01()));
    }
    phi.push_back(phi1);
    phi.push_back(phi2);
@@ -346,6 +409,8 @@ void Primula::GenerateLandslides(const unsigned int & num_landslides)
    std::chrono::duration<double> elapsed_slope_ls = finish_slope_ls - start_slope_ls;
    std::cout << "Extraction elapsed time: " << elapsed_slope_ls.count() << " s\n";
 */
+
+   return true;
 
 }
 

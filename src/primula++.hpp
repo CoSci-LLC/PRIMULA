@@ -43,7 +43,7 @@ class Primula
    //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
-      void GenerateLandslides(const unsigned int & num_landslides);
+      bool GenerateLandslides(const std::string & file, const unsigned int & num_landslides);
       bool ReadCSV(const std::string & file, const unsigned int & num_landslides);
       //void FindFOS();
 
@@ -62,6 +62,16 @@ class Primula
       //std::vector<Tree> trees_;
       std::vector<int> soil_id_;
       std::vector<std::vector<double>> z_;
+
+      std::vector<double> Crl_Fs200_;
+      std::vector<double> Crl_Fs800_;
+      std::vector<double> Crl_Pa200_;
+      std::vector<double> Crl_Pa400_;
+      std::vector<double> Crl_Mf300_;
+      std::vector<double> Crl_Mf600_;
+      std::vector<double> Crl_Cs150_;
+      std::vector<double> Cr_grassland_;
+      std::vector<double> Cr_shrubland_;
       
       double veg_weight_ = 70.0;  // [kg/m2]
       
