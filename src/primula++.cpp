@@ -26,6 +26,8 @@
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 #include <boost/math/distributions/triangular.hpp>
+#include <boost/math/distributions/uniform.hpp>
+#include <boost/math/distributions/normal.hpp>
 
 #include "primula++.hpp"
 //#include "raster_functions.hpp"
@@ -60,6 +62,7 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
       return false;
    }
 
+   std::vector<double> max_z_;
    std::string line;
    std::string word;
    int cod_pos, prof_pos, cod, prof;
@@ -134,9 +137,9 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
    return true;
 }
 
-/*void Primula::GenerateLandslides(const unsigned int & num_landslides)
+void Primula::GenerateLandslides(const unsigned int & num_landslides)
 {
-   landslide_.resize(num_landslides);
+   //landslide_.resize(num_landslides);
 
    //GenerateRandomUniform01(landlide_.x_, dem_.xllcorner_, dem_.yllcorner_, dem_xurcorner_, dem_.yurcorner_);
 
@@ -146,7 +149,12 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
    boost::mt19937 rng;                // Always same sequence for the moment
  //boost::mt19937 rng(std::time(0));  // Randomise generator
    static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
+   boost::math::uniform_distribution<> rng_phi1(30,40);
+   boost::math::uniform_distribution<> rng_phi2(35,40);
+   boost::math::uniform_distribution<> rng_gamma(17,19);
+   boost::math::uniform_distribution<> rng_ks(0.5,100);
 
+/*
 // -----------------------------------------------------
 // ... normal random number generator for soil depth ...
 // -----------------------------------------------------
@@ -165,14 +173,25 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
 // --------------------------------------------------------
    boost::variate_generator<boost::mt19937, boost::normal_distribution<> >
       rng_soil_friction_angle(rng, boost::normal_distribution<>(soil_friction_angle_mean_, soil_friction_angle_sd_));
+*/
+
+// --------------------------------------------------------
+// ... normal random number generator for landslide area ...
+// --------------------------------------------------------
+   boost::math::normal_distribution<> rng_area(area_mu_, area_sigma_);
+
+// --------------------------------------------------------
+// ... normal random number generator for length-to-width ratio ...
+// --------------------------------------------------------
+   boost::math::normal_distribution<> rng_l2w(l2w_mu_, l2w_sigma_);
 
 // -----------------------------------------------------
 // ... Inverse gamma distribution for landslide area ...
 // -----------------------------------------------------
-   boost::math::inverse_gamma_distribution<> inv_gamma_dist(inv_gamma_rho_, inv_gamma_a_);
+   //boost::math::inverse_gamma_distribution<> inv_gamma_dist(inv_gamma_rho_, inv_gamma_a_);
 
    // Plot density distribution as a check. Here using Tecplot 360 output format
-   std::ofstream fout;
+   /*std::ofstream fout;
    fout.open("inv_gamma_dist.dat");
    fout << "VARIABLES = \"Area [km<sup>2</sup>]\" \"p [km<sup>-2</sup>]\"" << std::endl;
    fout << "DATASETAUXDATA rho = \"" << inv_gamma_rho_ << "\"" << std::endl;
@@ -186,7 +205,7 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
       const auto area = static_cast<double>(i)/static_cast<double>(num_intervals)*area_max;
       fout << area << " " << boost::math::pdf(inv_gamma_dist, area + inv_gamma_s_) << std::endl;
    }
-   fout.close();
+   fout.close();*/
 
 // ----------------------------------------------
 // ... Generate LS coordinates using rng ...
@@ -194,55 +213,42 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
 // ----------------------------------------------
    auto start_rng = std::chrono::high_resolution_clock::now(); // Time loop
    
-   //generate landslide areas
-   std::vector<double> p_A_L;
-   double sum_p_A_L = 0.0;
-   // Landslide area is in 10 m2 increment in km2 (because parameters are in km2)
-   for (double i = 0.00001; i <= 2500*0.000001; i += 0.00001) {
-      double A_L = boost::math::pdf(inv_gamma_dist,i);
-      if (p_A_L.empty())
-         p_A_L.push_back(A_L);
-      else
-         p_A_L.push_back(A_L+(p_A_L.back()));
-      sum_p_A_L += A_L;
-   }
+   std::vector<std::vector<double>> phi;
+   std::vector<std::vector<double>> gamma;
+   std::vector<std::vector<double>> ks;
 
-   for (auto & it : landslide_)
+   std::vector<double> phi1;
+   std::vector<double> phi2;
+   std::vector<double> gamma1;
+   std::vector<double> ks1;
+   std::vector<double> ks2;
+   for (int i = 0; i < num_landslides; i++)
    {
-      // randomly create location of landslide
-      it.x_ = rng_uniform_01() * (dem_.xurcorner_ - dem_.xllcorner_) + dem_.xllcorner_;
-      it.y_ = rng_uniform_01() * (dem_.yurcorner_ - dem_.yllcorner_) + dem_.yllcorner_;
-   
-      // randomly determine landslide area
-      double unif_landslide = rng_uniform_01();
-      int id = 0;
-      while (id < p_A_L.size()+1) {
-         if (unif_landslide > p_A_L.at(id)/sum_p_A_L)
-            id++;
-         else
-            break;
-      }
-      it.area_ = (id+1)*10; // To get area in m2 since increaments are in 10 m2
+      Landslide slide;
 
-      it.width_ = sqrt((it.area_*4)/(M_PI*2));
-      it.length_ = it.width_*2;
+      phi1.push_back(quantile(rng_phi1, rng_uniform_01()));
+      phi2.push_back(quantile(rng_phi2, rng_uniform_01()));
+      gamma1.push_back(quantile(rng_gamma, rng_uniform_01()));
+      ks1.push_back(quantile(rng_ks, rng_uniform_01()));
+      ks2.push_back(quantile(rng_ks, rng_uniform_01()));
 
-      // generate soil depth, cohesion, and friction angle
-      it.soildepth_ = rng_soil_depth() * boost::math::cdf(complement(snormal,it.slope_));
-      if (it.soildepth_ <= 0) it.soildepth_ = 0.01;
-      it.cohesion_ = rng_soil_cohesion();
-      if (it.cohesion_ <= 0) it.cohesion_ = 10;
-      it.SetFrictionAngle(rng_soil_friction_angle());
-   
-      double e = sqrt(1 - (pow(it.width_,2)/pow(it.length_,2)));
-      it.circum_ = 4 * it.length_ * boost::math::ellint_2(e);
+      slide.area_ = pow(10,quantile(rng_area, rng_uniform_01()));
+      auto l2w = pow(10,quantile(rng_l2w, rng_uniform_01()));
+      slide.width_ = sqrt(slide.area_ / l2w);
+      slide.length_ = slide.width_ * l2w;
+      landslide_.push_back(slide);
    }
-   auto finish_rng = std::chrono::high_resolution_clock::now(); // End time loop
+   phi.push_back(phi1);
+   phi.push_back(phi2);
+   gamma.push_back(gamma1);
+   ks.push_back(ks1);
+   ks.push_back(ks2);
+
+   auto finish_rng = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
    std::chrono::duration<double> elapsed_rng = finish_rng - start_rng;
-   std::cout << "Random point generation elapsed time: " << elapsed_rng.count() << " s\n";
+   std::cout << "Landslide generation elapsed time: " << elapsed_rng.count() << " s\n";
 
-
-
+/*
 // ----------------------------------------------
 // ... Bi-linear interpolation ...
 // ... <TODO>
@@ -339,10 +345,11 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
    auto finish_slope_ls = std::chrono::high_resolution_clock::now(); // End time extraction
    std::chrono::duration<double> elapsed_slope_ls = finish_slope_ls - start_slope_ls;
    std::cout << "Extraction elapsed time: " << elapsed_slope_ls.count() << " s\n";
+*/
 
 }
 
-void Primula::AddTrees(const std::std::string & file)
+/*void Primula::AddTrees(const std::std::string & file)
 {
 // -----------------------------------------------------
 // ... Inverse gamma distribution for root basal ...

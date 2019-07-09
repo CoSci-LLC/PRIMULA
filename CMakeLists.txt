@@ -16,6 +16,7 @@ add_executable(
     PRIMULA++ 
     src/main.cpp 
     src/primula++.cpp
+    src/landslide.cpp
 )
 
 target_link_libraries(PRIMULA++ OpenMP::OpenMP_CXX)
