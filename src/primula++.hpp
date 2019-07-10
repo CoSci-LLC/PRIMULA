@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <math.h>
 
-//#include "raster.hpp"
+#include "raster.hpp"
 #include "landslide.hpp"
 //#include "tree.hpp"
 
@@ -58,6 +58,8 @@ class Primula
       //Raster dem_;
       //Raster twi_;
       //Raster slope_;
+      Raster soil_type_;
+      Raster soil_depth_;
       std::vector<Landslide> landslide_;
       //std::vector<Tree> trees_;
       std::vector<int> soil_id_;
@@ -74,6 +76,7 @@ class Primula
       std::vector<double> Cr_shrubland_;
       
       double veg_weight_ = 70.0;  // [kg/m2]
+      double rainfall_ = 0.100;   // [m/day]
       
       // Inverse Gamma distribution parameters
       //double inv_gamma_rho_ = 1.6;          // BAFU landslide databank (2018)

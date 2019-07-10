@@ -209,7 +209,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    fout.close();*/
 
 // ----------------------------------------------
-// ... Generate LS coordinates using rng ...
+// ... Generate soil properties ...
 // ... Generate random data ...
 // ----------------------------------------------
    auto start_rng = std::chrono::high_resolution_clock::now(); // Time loop
@@ -309,50 +309,46 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
 
    auto finish_rng = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
    std::chrono::duration<double> elapsed_rng = finish_rng - start_rng;
-   std::cout << "Landslide generation elapsed time: " << elapsed_rng.count() << " s\n";
+   std::cout << "Soil generation elapsed time: " << elapsed_rng.count() << " s\n";
+
+// ----------------------------------------------
+// ... Landslide generation ...
+// ----------------------------------------------
+   auto start_sli = std::chrono::high_resolution_clock::now(); // Time bi-linear interpolation
+
+   for (auto i = 0; i < num_landslides; i++)
+   {
+      Raster friction_angle(soil_type_);
+      Raster permeability(soil_type_);
+      Raster depth(soil_depth_);
+
+      for (auto j = 0; j < soil_type_.attribute_.size(); j++)
+      {
+         if (soil_type_.attribute_.at(j))
+         {
+            friction_angle.attribute_.at(j) = phi.at((int)soil_type_.attribute_.at(j)-1).at(i);
+            permeability.attribute_.at(j) = ks.at((int)soil_type_.attribute_.at(j)-1).at(i);
+         }
+
+         if (soil_depth_.attribute_.at(j))
+         {
+            for (auto k = 0; k < soil_id_.size(); k++)
+            {
+               if (soil_depth_.attribute_.at(j) == soil_id_.at(k))
+               {
+                  depth.attribute_.at(j) = z_.at(k).at(i);
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   auto finish_sli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
+   std::chrono::duration<double> elapsed_sli = finish_sli - start_sli;
+   std::cout << "Landslide generation elapsed time: " << elapsed_sli.count() << " s\n";
 
 /*
-// ----------------------------------------------
-// ... Bi-linear interpolation ...
-// ... <TODO>
-// ... SHOULD USE OMP
-// ... </TODO>
-// ----------------------------------------------
-   auto start_bli = std::chrono::high_resolution_clock::now(); // Time bi-linear interpolation
-   std::vector<double> raster_cell;
-   for (auto & it : landslide_)
-   {
-//    auto rtn = FindRasterCell(dem_, it.x_, it.y_, raster_cell); // Returns {x1, x2, y1, y2, z11, z12, z21, z22}
-      auto raster_cell = FindRasterCell(dem_, it.x_, it.y_);      // Returns {x1, x2, y1, y2, z11, z12, z21, z22}
-//    auto cellCoord = FindRasterCellCoord(dem_, it.x_, it.y_);   // Returns {x1, x2, y1, y2}
-//    auto cellIndex = FindRasterCellIndex(dem_, it.x_, it.y_);   // Returns {i, j, k, l}
-//    if (!rtn) return EXIT_SUCCESS;
-      it.z_ = BilinearInterpolation(raster_cell.at(4),
-                                    raster_cell.at(5),
-                                    raster_cell.at(6),
-                                    raster_cell.at(7),
-                                    raster_cell.at(0),
-                                    raster_cell.at(1),
-                                    raster_cell.at(2),
-                                    raster_cell.at(3),
-                                    it.x_,
-                                    it.y_);
-   }
-   auto finish_bli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
-   std::chrono::duration<double> elapsed_bli = finish_bli - start_bli;
-   std::cout << "Bi-linear interpolation elapsed time: " << elapsed_bli.count() << " s\n";
-
-   // Print to file
-   std::std::string filename = "ls.xyz.dat";
-// std::ofstream fout;
-   fout.open(filename);
-   fout << std::fixed << std::setprecision(4);
-   for (auto & it : landslide_)
-   {
-      fout << it.x_ << " " << it.y_ << " " << it.z_ << std::endl;
-   }
-   fout.close();
-
 // ----------------------------------------------
 // ... Calculate slopes, twi, and related attributes ...
 // ----------------------------------------------

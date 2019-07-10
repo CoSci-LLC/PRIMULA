@@ -28,8 +28,8 @@
 #include <boost/random/lognormal_distribution.hpp>
 #include <boost/math/distributions/inverse_gamma.hpp>
 
-//#include "raster.hpp"
-//#include "raster_functions.hpp"
+#include "raster.hpp"
+#include "raster_functions.hpp"
 //#include "landslide.hpp"
 #include "primula++.hpp"
 
@@ -54,8 +54,11 @@ int main(int argc, char **argv)
       num_landslides = std::stoul(argv[3]);*/
 
    Primula primula;
-   primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv",1000);
-   primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv",1000);
+
+   primula.soil_type_.Read("../tests/malonno/soils_MALONNO_v2.asc");
+   primula.soil_depth_.Read("../tests/malonno/soils_MALONNO.asc");
+   primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv",100);
+   primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv",100);
 
    return EXIT_SUCCESS;
 }
