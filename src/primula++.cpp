@@ -136,6 +136,25 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
    return true;
 }
 
+Raster Primula::TopModel_v3(const Raster & ks, const Raster & z)
+{
+   Raster W(ks);
+
+   for (auto i = 0; i < ks.attribute_.size(); i++)
+   {
+      if (slope_.attribute_.at(i) != slope_.nodata_value_)
+      {
+         W.attribute_.at(i) = rainfall_ * 0.9 / (ks.attribute_.at(i) * z.attribute_.at(i) * cos(slope_.attribute_.at(i))) * twi_.attribute_.at(i);
+         if (W.attribute_.at(i) > 1) W.attribute_.at(i) = 1;
+      } else
+      {
+         W.attribute_.at(i) = slope_.nodata_value_;
+      }
+   }
+
+   return W;
+}
+
 bool Primula::GenerateLandslides(const std::string & file, const unsigned int & num_landslides)
 {
    //landslide_.resize(num_landslides);
@@ -253,13 +272,13 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       while (ss.good())
       {
          getline(ss,word,',');
-         if (count == Pa400_pos) Pa400.push_back(std::stod(word));
-         else if (count == Pa200_pos) Pa200.push_back(std::stod(word));
-         else if (count == Fs800_pos) Fs800.push_back(std::stod(word));
-         else if (count == Fs200_pos) Fs200.push_back(std::stod(word));
-         else if (count == Cs150_pos) Cs150.push_back(std::stod(word));
-         else if (count == Mf600_pos) Mf600.push_back(std::stod(word));
-         else if (count == Mf300_pos) Mf300.push_back(std::stod(word));
+         if (count == Pa400_pos) Pa400.push_back(std::stod(word)*1000);
+         else if (count == Pa200_pos) Pa200.push_back(std::stod(word)*1000);
+         else if (count == Fs800_pos) Fs800.push_back(std::stod(word)*1000);
+         else if (count == Fs200_pos) Fs200.push_back(std::stod(word)*1000);
+         else if (count == Cs150_pos) Cs150.push_back(std::stod(word)*1000);
+         else if (count == Mf600_pos) Mf600.push_back(std::stod(word)*1000);
+         else if (count == Mf300_pos) Mf300.push_back(std::stod(word)*1000);
          count++;
       }
    }
@@ -298,8 +317,8 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       Crl_Mf600_.push_back(Mf600.at(n));
       Crl_Cs150_.push_back(Cs150.at(n));
 
-      Cr_grassland_.push_back(quantile(rng_cr_grass,rng_uniform_01()));
-      Cr_shrubland_.push_back(quantile(rng_cr_shrub,rng_uniform_01()));
+      Cr_grassland_.push_back(quantile(rng_cr_grass,rng_uniform_01())*1000);
+      Cr_shrubland_.push_back(quantile(rng_cr_shrub,rng_uniform_01())*1000);
    }
    phi.push_back(phi1);
    phi.push_back(phi2);
@@ -321,6 +340,8 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       Raster friction_angle(soil_type_);
       Raster permeability(soil_type_);
       Raster depth(soil_depth_);
+      Raster crl(dusaf_);
+      Raster crb(soil_depth_);
 
       for (auto j = 0; j < soil_type_.attribute_.size(); j++)
       {
@@ -341,7 +362,50 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
                }
             }
          }
+
+         switch ((int)dusaf_.attribute_.at(i))
+         {
+            case 3211:
+            case 3212:
+            case 3221:
+               crl.attribute_.at(i) = Cr_grassland_.at(i);
+               break;
+            case 332:
+            case 333:
+               crl.attribute_.at(i) = Cr_shrubland_.at(i);
+               break;
+            case 3121:
+               crl.attribute_.at(i) = Crl_Pa400_.at(i);
+               break;
+            case 3122:
+               crl.attribute_.at(i) = Crl_Pa200_.at(i);
+               break;
+            case 31111:
+               crl.attribute_.at(i) = Crl_Fs800_.at(i);
+               break;
+            case 31121:
+               crl.attribute_.at(i) = Crl_Fs200_.at(i);
+               break;
+            case 3114:
+            case 222:
+               crl.attribute_.at(i) = Crl_Cs150_.at(i);
+               break;
+            case 31311:
+               crl.attribute_.at(i) = Crl_Mf600_.at(i);
+               break;
+            case 31321:
+               crl.attribute_.at(i) = Crl_Mf300_.at(i);
+               break;
+            default:
+               crl.attribute_.at(i) = dusaf_.attribute_.at(i);
+               break;
+         }
+
+         if (soil_depth_.attribute_.at(i) >= 0.5) crb.attribute_.at(i) = 0;
+         else crb.attribute_.at(i) = soil_depth_.attribute_.at(i);
       }
+
+      auto m = TopModel_v3(permeability,depth);
    }
 
    auto finish_sli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation

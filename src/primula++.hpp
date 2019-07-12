@@ -56,10 +56,11 @@ class Primula
  
       // ... Member Data ...
       //Raster dem_;
-      //Raster twi_;
-      //Raster slope_;
+      Raster slope_;
+      Raster twi_;
       Raster soil_type_;
       Raster soil_depth_;
+      Raster dusaf_;
       std::vector<Landslide> landslide_;
       //std::vector<Tree> trees_;
       std::vector<int> soil_id_;
@@ -112,7 +113,7 @@ class Primula
    //==========================================================================
 
    private:
-      //bool TreeRead(const std::string & file);
+      Raster TopModel_v3(const Raster & ks, const Raster & z);
 
 };
 

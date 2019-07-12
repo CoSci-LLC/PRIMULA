@@ -55,8 +55,12 @@ int main(int argc, char **argv)
 
    Primula primula;
 
+   primula.slope_.Read("../tests/malonno/slope_MALONNO.asc");
+   primula.twi_.Read("../tests/malonno/twi_MALONNO.asc");
    primula.soil_type_.Read("../tests/malonno/soils_MALONNO_v2.asc");
    primula.soil_depth_.Read("../tests/malonno/soils_MALONNO.asc");
+   primula.dusaf_.Read("../tests/malonno/dusaf_MALONNO.asc");
+
    primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv",100);
    primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv",100);
 

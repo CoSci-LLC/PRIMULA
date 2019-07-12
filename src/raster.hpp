@@ -41,6 +41,7 @@ class Raster {
             this->cellsizey_ = raster.cellsizey_;
             this->xllcorner_ = raster.xllcorner_;
             this->yllcorner_ = raster.yllcorner_;
+            this->nodata_value_ = raster.nodata_value_;
             this->points_ = raster.points_;
             this->attribute_.resize(ncells_);
       };
