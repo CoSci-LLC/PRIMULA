@@ -57,14 +57,15 @@ class Primula
       // ... Member Data ...
       //Raster dem_;
       Raster slope_;
+      Raster probslope_;
       Raster twi_;
       Raster soil_type_;
       Raster soil_depth_;
       Raster dusaf_;
       std::vector<Landslide> landslide_;
-      //std::vector<Tree> trees_;
       std::vector<int> soil_id_;
       std::vector<std::vector<double>> z_;
+      Raster pr_failure_;
 
       std::vector<double> Crl_Fs200_;
       std::vector<double> Crl_Fs800_;
@@ -114,6 +115,7 @@ class Primula
 
    private:
       Raster TopModel_v3(const Raster & ks, const Raster & z);
+      Raster MDSTab_v2(const Landslide & slide, const Raster & phi, const Raster & m, const double & gamma_s, const Raster & z, const Raster & Crl, const Raster & Crb);
 
 };
 

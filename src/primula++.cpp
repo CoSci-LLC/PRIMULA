@@ -67,17 +67,21 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
    std::string word;
    int cod_pos, prof_pos, cod, prof;
 
+   // find columns with COD_UTS1 and PROF_UTILE
    int count = 0;
    getline(fin, line);
    std::stringstream ss(line);
    while (ss.good())
    {
       getline(ss,word,',');
+      word.erase(std::remove_if(word.begin(),word.end(),
+         [](auto const & c) -> bool {return std::iscntrl(c);}),word.end());
       if (word == "COD_UTS1") cod_pos = count;
       else if (word == "PROF_UTILE") prof_pos = count;
       count++;
    }
 
+   // extract COD_UTS1 and PROF_UTILE info in each line
    while (getline(fin, line))
    {
       count = 0;
@@ -114,6 +118,7 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
          } else out << c;
       }
 
+      // store if info not already found
       if (std::find(soil_id_.begin(), soil_id_.end(), cod)==soil_id_.end())
       {
          soil_id_.push_back(cod);
@@ -136,6 +141,7 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
    return true;
 }
 
+
 Raster Primula::TopModel_v3(const Raster & ks, const Raster & z)
 {
    Raster W(ks);
@@ -155,6 +161,58 @@ Raster Primula::TopModel_v3(const Raster & ks, const Raster & z)
    return W;
 }
 
+Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Raster & m, const double & gamma_s, const Raster & z, const Raster & Crl, const Raster & Crb)
+{
+   auto gamma_w = 9.81;
+   Raster FS(m);
+
+   // calculate factor of safety for each raster cell
+   for (auto i = 0; i < FS.attribute_.size(); i++)
+   {
+      auto tmp_phi = phi.attribute_.at(i);
+      auto tmp_m = m.attribute_.at(i);
+      auto tmp_z = z.attribute_.at(i);
+      auto tmp_Crl = Crl.attribute_.at(i);
+      auto tmp_Crb = Crb.attribute_.at(i);
+
+      // run calculation if probslope is non-zero
+      if (probslope_.attribute_.at(i))
+      {
+         auto Fdc = gamma_s * tmp_z * sin(probslope_.attribute_.at(i)) * cos(probslope_.attribute_.at(i)) * slide.width_ * slide.length_;
+         auto K0 = 1 - sin(tmp_phi);
+         // long equation derived from MDSTAB_v2.m
+         auto Frl = 0.5 * K0 * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.length_ * pow(tmp_z,2) * cos(probslope_.attribute_.at(i)) * tan(tmp_phi) * (tmp_Crl*1000) * slide.length_ * tmp_z * cos(probslope_.attribute_.at(i));
+         
+         // Rankine solution for cohesive soils
+         // Used in MDSTAB_V2.m
+         auto K = 4 * pow(cos(probslope_.attribute_.at(i)),2) * (pow(cos(probslope_.attribute_.at(i)),2) - pow(cos(tmp_phi),2)) + (4 * pow(((tmp_Crl*1000)/(gamma_s * tmp_z)),2) * pow(cos(tmp_phi),2)) + (8 * ((tmp_Crl*1000)/(gamma_s * tmp_z)) * pow(cos(probslope_.attribute_.at(i)),2) * sin(tmp_phi) * cos(tmp_phi));
+         if (K < 0) K = 0;
+
+         auto Kp = (1 / pow(cos(tmp_phi),2)) * (2 * pow(cos(probslope_.attribute_.at(i)),2) + 2 * ((tmp_Crl*1000)/(gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) + sqrt(K)) - 1;
+         auto Ka = (1 / pow(cos(tmp_phi),2)) * (2 * pow(cos(probslope_.attribute_.at(i)),2) + 2 * ((tmp_Crl*1000)/(gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) + sqrt(K)) - 1;
+      
+         // net driving force of the upslope margin
+         auto Fdu = 0.5 * Ka * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * cos(slope_.attribute_.at(i) - probslope_.attribute_.at(i));
+         auto Fnu = 0.5 * Ka * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * sin(slope_.attribute_.at(i) - probslope_.attribute_.at(i));
+      
+         // Passive force on the downslope margin
+         auto Frd = 0.5 * Kp * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * cos(slope_.attribute_.at(i) - probslope_.attribute_.at(i));
+         // Negligible, so clearly we set it to 0 ¯\_(ツ)_/¯
+         Frd = 0;
+         auto Fnd = 0.5 * Kp * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * sin(slope_.attribute_.at(i) - probslope_.attribute_.at(i));
+         
+         // Basal resistance force
+         auto Fnc = (gamma_s - gamma_w * tmp_m) * tmp_z * pow(cos(probslope_.attribute_.at(i)),2) * slide.width_ * slide.length_;
+         auto Fnt = Fnc + Fnu - Fnd;
+         auto Frb = (tmp_Crb*1000) * slide.width_ * slide.length_ + Fnt * tan(tmp_phi);
+      
+         FS.attribute_.at(i) = (Frb + 2 * Frl + Frd - Fdu) / Fdc;
+      }
+   }
+
+   return FS;
+}
+
 bool Primula::GenerateLandslides(const std::string & file, const unsigned int & num_landslides)
 {
    //landslide_.resize(num_landslides);
@@ -167,6 +225,10 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    boost::mt19937 rng;                // Always same sequence for the moment
  //boost::mt19937 rng(std::time(0));  // Randomise generator
    static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
+   
+// ------------------------------------------------------
+// ... uniform distribution functions ...
+// ------------------------------------------------------
    boost::math::uniform_distribution<> rng_phi1(30,40);
    boost::math::uniform_distribution<> rng_phi2(35,40);
    boost::math::uniform_distribution<> rng_gamma(17,19);
@@ -174,34 +236,13 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    boost::math::uniform_distribution<> rng_cr_grass(5,7.5);
    boost::math::uniform_distribution<> rng_cr_shrub(0,15);
 
-/*
-// -----------------------------------------------------
-// ... normal random number generator for soil depth ...
-// -----------------------------------------------------
-   boost::variate_generator<boost::mt19937, boost::normal_distribution<> >
-      rng_soil_depth(rng, boost::normal_distribution<>(soil_depth_mean_, soil_depth_sd_));
-   boost::math::normal snormal(1.35*33.15*M_PI/180.0,0.75*5.5*M_PI/180.0);
-
 // --------------------------------------------------------
-// ... normal random number generator for soil cohesion ...
-// --------------------------------------------------------
-   boost::variate_generator<boost::mt19937, boost::normal_distribution<> >
-      rng_soil_cohesion(rng, boost::normal_distribution<>(soil_cohesion_mean_, soil_cohesion_sd_));
-
-// --------------------------------------------------------
-// ... normal random number generator for soil friction_angle ...
-// --------------------------------------------------------
-   boost::variate_generator<boost::mt19937, boost::normal_distribution<> >
-      rng_soil_friction_angle(rng, boost::normal_distribution<>(soil_friction_angle_mean_, soil_friction_angle_sd_));
-*/
-
-// --------------------------------------------------------
-// ... normal random number generator for landslide area ...
+// ... normal distribution for landslide area ...
 // --------------------------------------------------------
    boost::math::normal_distribution<> rng_area(area_mu_, area_sigma_);
 
 // --------------------------------------------------------
-// ... normal random number generator for length-to-width ratio ...
+// ... normal distribution for length-to-width ratio ...
 // --------------------------------------------------------
    boost::math::normal_distribution<> rng_l2w(l2w_mu_, l2w_sigma_);
 
@@ -247,13 +288,14 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    std::vector<double> Fs200, Fs800, Pa200, Pa400, Mf600, Mf300, Cs150;
    std::string line, word;
 
+   // get column numbers for each data set
    getline(fin, line);
    std::stringstream ss(line);
    while (ss.good())
    {
       getline(ss,word,',');
       word.erase(std::remove_if(word.begin(),word.end(),
-         [](auto const & c) -> bool {return !std::isalnum(c);}),word.end());
+         [](auto const & c) -> bool {return std::iscntrl(c);}),word.end());
       
       if (word == "Pa400") Pa400_pos = count;
       else if (word == "Pa200") Pa200_pos = count;
@@ -265,6 +307,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       count++;
    }
 
+   // store data in each line
    while (getline(fin, line))
    {
       count = 0;
@@ -283,31 +326,34 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       }
    }
 
-   std::vector<std::vector<double>> phi;
-   std::vector<std::vector<double>> gamma;
-   std::vector<std::vector<double>> ks;
+   std::vector<std::vector<double>> phi;  // soil friction angle (rad)
+   std::vector<std::vector<double>> gamma;  // specific weight falues [kN/m^3]
+   std::vector<std::vector<double>> ks;  // soil permeability [m/day]
 
-   std::vector<double> phi1;
-   std::vector<double> phi2;
-   std::vector<double> gamma1;
-   std::vector<double> ks1;
-   std::vector<double> ks2;
+   std::vector<double> phi1;  // phi values for soil 1
+   std::vector<double> phi2;  // phi values for soil 2
+   std::vector<double> gamma1;  // gamma values (for soil 1?)
+   std::vector<double> ks1;  // ks values for soil 1
+   std::vector<double> ks2;  // ks values for soil 2
    for (int i = 0; i < num_landslides; i++)
    {
       Landslide slide;
 
+      // generate random soil properties
       phi1.push_back(quantile(rng_phi1, rng_uniform_01()));
       phi2.push_back(quantile(rng_phi2, rng_uniform_01()));
       gamma1.push_back(quantile(rng_gamma, rng_uniform_01()));
       ks1.push_back(quantile(rng_ks, rng_uniform_01()));
       ks2.push_back(quantile(rng_ks, rng_uniform_01()));
 
+      // generate random landslide properties
       slide.area_ = pow(10,quantile(rng_area, rng_uniform_01()));
       auto l2w = pow(10,quantile(rng_l2w, rng_uniform_01()));
       slide.width_ = sqrt(slide.area_ / l2w);
       slide.length_ = slide.width_ * l2w;
       landslide_.push_back(slide);
 
+      // pick random forest density
       auto n = rand() % Pa200.size();
       Crl_Fs200_.push_back(Fs200.at(n));
       Crl_Fs800_.push_back(Fs800.at(n));
@@ -320,6 +366,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       Cr_grassland_.push_back(quantile(rng_cr_grass,rng_uniform_01())*1000);
       Cr_shrubland_.push_back(quantile(rng_cr_shrub,rng_uniform_01())*1000);
    }
+   // add to vector for easier access
    phi.push_back(phi1);
    phi.push_back(phi2);
    gamma.push_back(gamma1);
@@ -335,6 +382,8 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
 // ----------------------------------------------
    auto start_sli = std::chrono::high_resolution_clock::now(); // Time bi-linear interpolation
 
+   Raster Pr_failure(probslope_);
+
    for (auto i = 0; i < num_landslides; i++)
    {
       Raster friction_angle(soil_type_);
@@ -343,16 +392,20 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       Raster crl(dusaf_);
       Raster crb(soil_depth_);
 
+      // go through each raster cell
       for (auto j = 0; j < soil_type_.attribute_.size(); j++)
       {
+         // if soil 1 or 2, translate info to rasters
          if (soil_type_.attribute_.at(j))
          {
-            friction_angle.attribute_.at(j) = phi.at((int)soil_type_.attribute_.at(j)-1).at(i);
-            permeability.attribute_.at(j) = ks.at((int)soil_type_.attribute_.at(j)-1).at(i);
+            // use the number to determine which element of the vector to access
+            friction_angle.attribute_.at(j) = phi.at((int)soil_type_.attribute_.at(j)-1).at(i) * M_PI/180;
+            permeability.attribute_.at(j) = ks.at((int)soil_type_.attribute_.at(j)-1).at(i) * M_PI/180;
          }
 
          if (soil_depth_.attribute_.at(j))
          {
+            // add the depth of the soil id in the raster to another raster
             for (auto k = 0; k < soil_id_.size(); k++)
             {
                if (soil_depth_.attribute_.at(j) == soil_id_.at(k))
@@ -363,6 +416,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
             }
          }
 
+         // copy dusaf raster, replacing codes with appropriate forest density
          switch ((int)dusaf_.attribute_.at(i))
          {
             case 3211:
@@ -401,144 +455,29 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
                break;
          }
 
-         if (soil_depth_.attribute_.at(i) >= 0.5) crb.attribute_.at(i) = 0;
-         else crb.attribute_.at(i) = soil_depth_.attribute_.at(i);
+         if (depth.attribute_.at(i) >= 0.5) crb.attribute_.at(i) = 0;
+         else crb.attribute_.at(i) = depth.attribute_.at(i);
       }
 
       auto m = TopModel_v3(permeability,depth);
+
+      auto FS = MDSTab_v2(landslide_.at(i), friction_angle, m, gamma.at(0).at(i), depth, crl, crb);
+      for (auto j = 0; j < Pr_failure.attribute_.size(); j++)
+      {
+         if (FS.attribute_.at(j) < 1 && FS.attribute_.at(j) > 0) Pr_failure.attribute_.at(j) += FS.attribute_.at(j);
+      }
    }
+
+   // get average of sum of failure probabilities
+   for (auto & c : Pr_failure.attribute_)
+   {
+      c /= num_landslides;
+   }
+
+   pr_failure_ = Pr_failure;
 
    auto finish_sli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
    std::chrono::duration<double> elapsed_sli = finish_sli - start_sli;
    std::cout << "Landslide generation elapsed time: " << elapsed_sli.count() << " s\n";
-
-/*
-// ----------------------------------------------
-// ... Calculate slopes, twi, and related attributes ...
-// ----------------------------------------------
-   auto start_slope_ls = std::chrono::high_resolution_clock::now(); // Time loop
-
-   for (auto & it : landslide_)
-   {
-      Point p = Point(it.x_,it.y_);
-      double minx = std::max(it.x_ - it.width_, dem_.xllcorner_);
-      double maxx = std::min(it.x_ + it.width_, dem_.xurcorner_);
-      double miny = std::max(it.y_ - it.width_, dem_.yllcorner_);
-      double maxy = std::min(it.y_ + it.width_, dem_.yurcorner_);
-      int counter = 0;
-
-      auto llIndex = FindRasterCellIndex(dem_, minx, miny);
-      auto lrIndex = FindRasterCellIndex(dem_, maxx, miny);
-      auto ulIndex = FindRasterCellIndex(dem_, minx, maxy);
-      for (int j = 0; j <= (ulIndex - llIndex)/dem_.ncols_; j++)
-      {
-         for (int i = llIndex; i <= lrIndex; i++)
-         {
-            if (p.dist(dem_.points_.at(i + j*dem_.ncols_)) <= it.width_)
-            {
-               counter++;
-               it.slope_ += slope_.attribute_.at(i + j*dem_.ncols_);
-               it.twi_ += twi_.attribute_.at(i + j*dem_.ncols_);
-            }
-         }
-      }
-
-      if (counter == 0)
-      {
-         auto cellIndex = FindRasterCellIndex(dem_, it.x_, it.y_);
-         it.slope_ = atan(slope_.attribute_.at(cellIndex)) * 180 / M_PI;
-         it.twi_ = twi_.attribute_.at(cellIndex);
-      } else
-      {
-         it.slope_ = atan(it.slope_ / counter) * 180 / M_PI;
-         it.twi_ = it.twi_ / counter;
-      }
-
-      it.volume_ = it.area_ * it.soildepth_ * cos(it.GetSlopeRad());
-      it.mass_ = it.volume_ * soil_density_;
-
-      it.m_ = (rain_intensity_/transmissivity_) * it.twi_; // incorrect but in original R code
-      //it.m_ = (rain_intensity_/transmissivity_) * exp(it.twi_) / cos(it.GetSlopeRad()); // correct
-      if (it.m_ > 1.0) it.m_ = 1.0;
-
-      it.pw_ = soil_density_ * gravity_ * it.soildepth_ * it.m_; // [Pa]
-      if (it.m_ > 1) it.m_ = 1;
-   }
-
-   auto finish_slope_ls = std::chrono::high_resolution_clock::now(); // End time extraction
-   std::chrono::duration<double> elapsed_slope_ls = finish_slope_ls - start_slope_ls;
-   std::cout << "Extraction elapsed time: " << elapsed_slope_ls.count() << " s\n";
-*/
-
-   return true;
-
 }
 
-/*void Primula::AddTrees(const std::std::string & file)
-{
-// -----------------------------------------------------
-// ... Inverse gamma distribution for root basal ...
-// -----------------------------------------------------
-   boost::math::inverse_gamma_distribution<> inv_gamma_dist_reinf(0.01220221, 0.004682089);
-
-   auto start_trees = std::chrono::high_resolution_clock::now(); // Time loop
-
-   unsigned int tree_count = 0;
-   double sum_dbh = 0.0;
-
-   TreeRead(file);
-
-   for (auto & t : trees_)
-   {
-      tree_count++;
-      sum_dbh += t.dbh_;
-
-      Point p(t.x_, t.y_);
-      for (auto & it : landslide_)
-      {
-         Point q(it.x_, it.y_);
-         if (p.dist(q) < t.root_len_)
-         {
-            it.root_lateral_ += (276601 * t.dbh_ * boost::math::pdf(inv_gamma_dist_reinf,p.dist(q)/(t.root_len_)))/1000;
-         }
-      }
-   }
-
-   sum_dbh /= tree_count;
-   for (auto & t : trees_)
-      t.SetWeight(sum_dbh);
-   std::sort(trees_.begin(), trees_.end(), [](const Tree & a, const Tree & b) -> bool
-   {
-      return a.weight_ < b.weight_;
-   });
-   if (trees_.size() % 2)
-      veg_weight_ = trees_.at(trees_.size()/2).weight_;
-   else veg_weight_ = (trees_.at((trees_.size()-1)/2).weight_ + trees_.at(trees_.size()/2).weight_)/2.0;
-   veg_weight_ *= 0.1;
-
-   auto finish_trees = std::chrono::high_resolution_clock::now(); // End time extraction
-   std::chrono::duration<double> elapsed_trees = finish_trees - start_trees;
-   std::cout << "Tree adding elapsed time: " << elapsed_trees.count() << " s\n";
-}
-
-void Primula::FindFOS()
-{
-// -----------------------------------------------------
-// ... Inverse gamma distribution for root basal ...
-// -----------------------------------------------------
-   boost::math::inverse_gamma_distribution<> inv_gamma_dist_basal(1.3, 3.7);
-
-   for (auto & it : landslide_)
-   {
-      // Root reinforcement values. Fixed and constant for the moment. To be computed later
-//    it.root_lateral_ = 0.0;    // Should be user input so passed to object from main perhaps
-      it.root_basal_ = boost::math::pdf(inv_gamma_dist_basal,it.soildepth_)*it.root_lateral_; // Fixed tree type for now
-      
-      auto Fd_parallel = gravity_ * sin(it.GetSlopeRad()) * (it.mass_ + veg_weight_ * it.area_);
-      auto Fd_perpendicular = gravity_ * cos(it.GetSlopeRad()) * (it.mass_ + veg_weight_ * it.area_);
-      auto Fr_basal = (it.area_ * (it.cohesion_ + it.root_basal_)) + ((Fd_perpendicular-(it.area_*it.pw_)) * tan(it.friction_angle_));
-      auto Fr_lateral = it.circum_ / 2 * it.root_lateral_;
-      auto Fr = Fr_basal + Fr_lateral;
-      it.fos_ = Fr / Fd_parallel;
-   }
-}*/
