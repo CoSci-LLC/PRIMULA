@@ -183,15 +183,15 @@ Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Ras
          {
             auto K0 = 1.0 - sin(tmp_phi);
             // long equation derived from MDSTAB_v2.m
-            auto Frl = 0.5 * K0 * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.length_ * pow(tmp_z,2) * cos(theta) * tan(tmp_phi) * tmp_Crl * slide.length_ * tmp_z * cos(theta);
-
+            auto Frl = 0.5 * K0 * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.length_ * pow(tmp_z,2) * cos(theta) * tan(tmp_phi) + tmp_Crl * slide.length_ * tmp_z * cos(theta);
+            
             // Rankine solution for cohesive soils
             // Used in MDSTAB_V2.m
             auto K = 4.0 * pow(cos(theta),2) * (pow(cos(theta),2) - pow(cos(tmp_phi),2)) + (4 * pow(tmp_Crl/(gamma_s * tmp_z),2) * pow(cos(tmp_phi),2)) + (8 * (tmp_Crl/(gamma_s * tmp_z)) * pow(cos(theta),2) * sin(tmp_phi) * cos(tmp_phi));
             if (K < 0) K = 0;
 
             auto Kp = (1 / pow(cos(tmp_phi),2)) * (2 * pow(cos(theta),2) + 2 * (tmp_Crl/(gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) + sqrt(K)) - 1;
-            auto Ka = (1 / pow(cos(tmp_phi),2)) * (2 * pow(cos(theta),2) + 2 * (tmp_Crl/(gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) + sqrt(K)) - 1;
+            auto Ka = (1 / pow(cos(tmp_phi),2)) * (2 * pow(cos(theta),2) + 2 * (tmp_Crl/(gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) - sqrt(K)) - 1;
 
             // net driving force of the upslope margin
             auto Fdu = 0.5 * Ka * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * cos(delta - theta);
