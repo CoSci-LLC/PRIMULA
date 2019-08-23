@@ -161,7 +161,7 @@ Raster Primula::TopModel_v3(const Raster & ks, const Raster & z)
 
 Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Raster & m, const double & gamma_s, const Raster & z, const Raster & Crl, const Raster & Crb)
 {
-   auto gamma_w = 9.810; // unit weight of water [kN/m3]
+   auto gamma_w = 9810; // unit weight of water [kN/m3]
    Raster FS(m);
 
    // calculate factor of safety for each raster cell
@@ -170,8 +170,8 @@ Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Ras
       auto tmp_phi = phi.attribute_.at(i);
       auto tmp_m = m.attribute_.at(i);
       auto tmp_z = z.attribute_.at(i);
-      auto tmp_Crl = Crl.attribute_.at(i)/1000.0;
-      auto tmp_Crb = Crb.attribute_.at(i)/1000.0;
+      auto tmp_Crl = Crl.attribute_.at(i);
+      auto tmp_Crb = Crb.attribute_.at(i);
       auto theta = probslope_.attribute_.at(i);
       auto delta = slope_.attribute_.at(i);
 
@@ -196,7 +196,10 @@ Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Ras
             // net driving force of the upslope margin
             auto Fdu = 0.5 * Ka * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * cos(delta - theta);
             auto Fnu = 0.5 * Ka * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * sin(delta - theta);
-         
+            //std::cout << Fdu << " " << Fnu << "\n";
+            //std::cout << 0.5 * Ka * pow(tmp_z,2) << "\n";
+            //std::cout << pow(tmp_m,2) << "\n";
+
             // Passive force on the downslope margin
             auto Frd = 0.5 * Kp * pow(tmp_z,2) * (gamma_s - gamma_w * pow(tmp_m,2)) * slide.width_ * cos(delta - theta);
             // Negligible, so clearly we set it to 0 immediately after calculating it ¯\_(ツ)_/¯
@@ -209,6 +212,10 @@ Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Ras
             auto Frb = tmp_Crb * slide.width_ * slide.length_ + Fnt * tan(tmp_phi);
 
             FS.attribute_.at(i) = (Frb + 2 * Frl + Frd - Fdu) / Fdc;
+            if (FS.attribute_.at(i) < 0) {
+               //std::cout << Frb << " " << Frl << " " << Fdu << "\n";
+               //std::cout << tmp_phi << "\n";
+            }
          }
       }
    }
@@ -433,7 +440,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
                crl.attribute_.at(j) = Crl_Mf300_.at(i);
                break;
             default:
-               crl.attribute_.at(j) = dusaf_.attribute_.at(j);
+               crl.attribute_.at(j) = 0;
                break;
          }
 
@@ -443,7 +450,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
 
       auto m = TopModel_v3(permeability,depth);
 
-      auto FS = MDSTab_v2(landslide_.at(i), friction_angle, m, gamma.at(0).at(i)/1000.0, depth, crl, crb);
+      auto FS = MDSTab_v2(landslide_.at(i), friction_angle, m, gamma.at(0).at(i), depth, crl, crb);
       for (auto j = 0; j < Pr_failure.attribute_.size(); j++)
       {
          if (probslope_.attribute_.at(j) == probslope_.nodata_value_) Pr_failure.attribute_.at(j) = Pr_failure.nodata_value_;
