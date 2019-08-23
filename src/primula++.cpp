@@ -212,10 +212,6 @@ Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Ras
             auto Frb = tmp_Crb * slide.width_ * slide.length_ + Fnt * tan(tmp_phi);
 
             FS.attribute_.at(i) = (Frb + 2 * Frl + Frd - Fdu) / Fdc;
-            if (FS.attribute_.at(i) < 0) {
-               //std::cout << Frb << " " << Frl << " " << Fdu << "\n";
-               //std::cout << tmp_phi << "\n";
-            }
          }
       }
    }
@@ -384,68 +380,70 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       // go through each raster cell
       for (auto j = 0; j < soil_type_.attribute_.size(); j++)
       {
-         // if soil 1 or 2, translate info to rasters
-         if (soil_type_.attribute_.at(j))
-         {
-            // use the number to determine which element of the vector to access
-            friction_angle.attribute_.at(j) = phi.at((int)soil_type_.attribute_.at(j)-1).at(i) * M_PI/180.0;
-            permeability.attribute_.at(j) = ks.at((int)soil_type_.attribute_.at(j)-1).at(i) * M_PI/180.0;
-         }
-
-         if (soil_depth_.attribute_.at(j))
-         {
-            // add the depth of the soil id in the raster to another raster
-            for (auto k = 0; k < soil_id_.size(); k++)
+         if (probslope_.attribute_.at(j) != probslope_.nodata_value_) {
+            // if soil 1 or 2, translate info to rasters
+            if (soil_type_.attribute_.at(j))
             {
-               if (soil_depth_.attribute_.at(j) == soil_id_.at(k))
+               // use the number to determine which element of the vector to access
+               friction_angle.attribute_.at(j) = phi.at((int)soil_type_.attribute_.at(j)-1).at(i) * M_PI/180.0;
+               permeability.attribute_.at(j) = ks.at((int)soil_type_.attribute_.at(j)-1).at(i) * M_PI/180.0;
+            }
+
+            if (soil_depth_.attribute_.at(j))
+            {
+               // add the depth of the soil id in the raster to another raster
+               for (auto k = 0; k < soil_id_.size(); k++)
                {
-                  depth.attribute_.at(j) = z_.at(k).at(i);
-                  break;
+                  if (soil_depth_.attribute_.at(j) == soil_id_.at(k))
+                  {
+                     depth.attribute_.at(j) = z_.at(k).at(i);
+                     break;
+                  }
                }
             }
-         }
 
-         // copy dusaf raster, replacing codes with appropriate forest density
-         switch ((int)dusaf_.attribute_.at(j))
-         {
-            case 3211:
-            case 3212:
-            case 3221:
-               crl.attribute_.at(j) = Cr_grassland_.at(i);
-               break;
-            case 332:
-            case 333:
-               crl.attribute_.at(j) = Cr_shrubland_.at(i);
-               break;
-            case 3121:
-               crl.attribute_.at(j) = Crl_Pa400_.at(i);
-               break;
-            case 3122:
-               crl.attribute_.at(j) = Crl_Pa200_.at(i);
-               break;
-            case 31111:
-               crl.attribute_.at(j) = Crl_Fs800_.at(i);
-               break;
-            case 31121:
-               crl.attribute_.at(j) = Crl_Fs200_.at(i);
-               break;
-            case 3114:
-            case 222:
-               crl.attribute_.at(j) = Crl_Cs150_.at(i);
-               break;
-            case 31311:
-               crl.attribute_.at(j) = Crl_Mf600_.at(i);
-               break;
-            case 31321:
-               crl.attribute_.at(j) = Crl_Mf300_.at(i);
-               break;
-            default:
-               crl.attribute_.at(j) = 0;
-               break;
-         }
+            // copy dusaf raster, replacing codes with appropriate forest density
+            switch ((int)dusaf_.attribute_.at(j))
+            {
+               case 3211:
+               case 3212:
+               case 3221:
+                  crl.attribute_.at(j) = Cr_grassland_.at(i);
+                  break;
+               case 332:
+               case 333:
+                  crl.attribute_.at(j) = Cr_shrubland_.at(i);
+                  break;
+               case 3121:
+                  crl.attribute_.at(j) = Crl_Pa400_.at(i);
+                  break;
+               case 3122:
+                  crl.attribute_.at(j) = Crl_Pa200_.at(i);
+                  break;
+               case 31111:
+                  crl.attribute_.at(j) = Crl_Fs800_.at(i);
+                  break;
+               case 31121:
+                  crl.attribute_.at(j) = Crl_Fs200_.at(i);
+                  break;
+               case 3114:
+               case 222:
+                  crl.attribute_.at(j) = Crl_Cs150_.at(i);
+                  break;
+               case 31311:
+                  crl.attribute_.at(j) = Crl_Mf600_.at(i);
+                  break;
+               case 31321:
+                  crl.attribute_.at(j) = Crl_Mf300_.at(i);
+                  break;
+               default:
+                  crl.attribute_.at(j) = 0;
+                  break;
+            }
 
-         if (depth.attribute_.at(j) >= 0.5) crb.attribute_.at(j) = 0;
-         else crb.attribute_.at(j) = crl.attribute_.at(j);
+            if (depth.attribute_.at(j) >= 0.5) crb.attribute_.at(j) = 0;
+            else crb.attribute_.at(j) = crl.attribute_.at(j);
+         }
       }
 
       auto m = TopModel_v3(permeability,depth);
