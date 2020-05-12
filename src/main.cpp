@@ -35,32 +35,20 @@
 
 int main(int argc, char **argv)
 {
-   /*if (argc != 4 && argc != 5) 
-   { 
-      std::cout << "Usage: slideformap++ <dem file name> <twi file name> [<tree file name>] <number of landslides>" << std::endl;
-      return EXIT_SUCCESS;
-   }
-  
-   const std::string demfile = argv[1];
-   const std::string twifile = argv[2];
-   std::string treefile;
-   unsigned int num_landslides;
-   if (argc == 5)
-   {
-      treefile = argv[3];
-      num_landslides = std::stoul(argv[4]);
-   }
-   else
-      num_landslides = std::stoul(argv[3]);*/
-
    Primula primula;
 
    primula.slope_.Read("../tests/malonno/slope_MALONNO.asc");
+   primula.slope_.Print("slope.asc", "asc", 8);
    primula.twi_.Read("../tests/malonno/twi_MALONNO.asc");
+   primula.twi_.Print("twi.asc", "asc", 8);
    primula.soil_type_.Read("../tests/malonno/soils_MALONNO_v2.asc");
+   primula.soil_type_.Print("soils.asc", "asc", 8);
    primula.soil_depth_.Read("../tests/malonno/soils_MALONNO.asc");
+   primula.soil_depth_.Print("depth.asc", "asc", 8);
    primula.dusaf_.Read("../tests/malonno/dusaf_MALONNO.asc");
+   primula.dusaf_.Print("dusaf.asc", "asc", 8);
    primula.probslope_.Read("../tests/malonno/PROBSLOPE_MALONNO.asc");
+   primula.probslope_.Print("probslope.asc", "asc", 8);
    for (auto i = 0; i < primula.probslope_.attribute_.size(); i++)
    {
       auto & c = primula.probslope_.attribute_.at(i);

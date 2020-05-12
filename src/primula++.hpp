@@ -51,7 +51,7 @@ class Primula
       static constexpr double gravity_ = 9.81;                  // [m/s^2]
       static constexpr double soil_density_ = 1834.8624;        // [kg/m^3] Schwarz M. R Code
       static constexpr double transmissivity_ = 0.0002644655;   // [m/s] Fixed for the moment. From R code
-      static constexpr double rain_intensity_ = 0.001*70/3600;  // [m/s] >> Eventually should live outside of slideformap class <<
+      static constexpr double rain_intensity_ = 0.001*70/3600;  // [m/s] >> Eventually should live outside of primula class <<
 
  
       // ... Member Data ...
