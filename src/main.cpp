@@ -29,11 +29,9 @@
 #include <boost/math/distributions/inverse_gamma.hpp>
 
 #include "raster.hpp"
-#include "raster_functions.hpp"
-//#include "landslide.hpp"
 #include "primula++.hpp"
 
-int main(int argc, char **argv)
+int main()
 {
    Primula primula;
 
@@ -49,7 +47,7 @@ int main(int argc, char **argv)
    primula.dusaf_.Print("dusaf.asc", "asc", 8);
    primula.probslope_.Read("../tests/malonno/PROBSLOPE_MALONNO.asc");
    primula.probslope_.Print("probslope.asc", "asc", 8);
-   for (auto i = 0; i < primula.probslope_.attribute_.size(); i++)
+   for (size_t i = 0; i < primula.probslope_.attribute_.size(); i++)
    {
       auto & c = primula.probslope_.attribute_.at(i);
       if (primula.slope_.attribute_.at(i) == primula.slope_.nodata_value_) c = primula.probslope_.nodata_value_;

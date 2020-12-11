@@ -17,7 +17,6 @@ add_executable(
     src/main.cpp 
     src/primula++.cpp
     src/raster.cpp
-    src/raster_functions.cpp
     src/landslide.cpp
 )
 

@@ -30,22 +30,6 @@ class Raster {
 
       // ... Constructors ...
       Raster() { };
-      //Raster(const std::string & file);     // TO IMPLEMENT
-      Raster(const Raster & raster)  // Copy constructor
-      {
-            this->ncols_ = raster.ncols_;
-            this->nrows_ = raster.nrows_;
-            this->ncells_ = raster.ncells_;
-            this->cellsize_ = raster.cellsize_;
-            this->cellsizex_ = raster.cellsizex_;
-            this->cellsizey_ = raster.cellsizey_;
-            this->xllcorner_ = raster.xllcorner_;
-            this->yllcorner_ = raster.yllcorner_;
-            this->nodata_value_ = raster.nodata_value_;
-            this->points_ = raster.points_;
-            this->attribute_.resize(ncells_);
-      };
-      //~Raster() { };                        // NEEDED?
 	
       // ... Member functions ...
       bool Read(const std::string & file);

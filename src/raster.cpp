@@ -120,7 +120,7 @@ bool Raster::Print(const std::string & file, const std::string & format, const i
  //   unsigned int count = 0;
     //for (auto & it : values_)
       //for (auto & it : points_)
-      for (auto i = 0; i < points_.size(); ++i)
+      for (size_t i = 0; i < points_.size(); ++i)
       {
          fout << points_.at(i).x_ << " " << points_.at(i).y_ << " " << attribute_.at(i) << std::endl;
       }

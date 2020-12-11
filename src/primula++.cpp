@@ -126,7 +126,7 @@ bool Primula::ReadCSV(const std::string & file, const unsigned int & num_landsli
          std::vector<double> rand;
          boost::math::triangular_distribution<> tri((2.0/3.0)*max_z,(3.0/4.0)*max_z,max_z);
 
-         for (auto i = 0; i < num_landslides; i++)
+         for (unsigned int i = 0; i < num_landslides; i++)
          {
             rand.push_back(quantile(tri, rng_uniform_01()));
          }
@@ -144,7 +144,7 @@ Raster Primula::TopModel_v3(const Raster & ks, const Raster & z)
 {
    Raster W(ks);
 
-   for (auto i = 0; i < ks.attribute_.size(); i++)
+   for (size_t i = 0; i < ks.attribute_.size(); i++)
    {
       if (slope_.attribute_.at(i) != slope_.nodata_value_)
       {
@@ -165,7 +165,7 @@ Raster Primula::MDSTab_v2(const Landslide & slide, const Raster & phi, const Ras
    Raster FS(m);
 
    // calculate factor of safety for each raster cell
-   for (auto i = 0; i < FS.attribute_.size(); i++)
+   for (size_t i = 0; i < FS.attribute_.size(); i++)
    {
       auto tmp_phi = phi.attribute_.at(i);
       auto tmp_m = m.attribute_.at(i);
@@ -267,7 +267,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       return false;
    }
 
-   auto count = 0;
+   unsigned int count = 0;
    unsigned int Fs200_pos, Fs800_pos, Pa200_pos, Pa400_pos, Mf300_pos, Mf600_pos, Cs150_pos;
    std::vector<double> Fs200, Fs800, Pa200, Pa400, Mf600, Mf300, Cs150;
    std::string line, word;
@@ -319,7 +319,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    std::vector<double> gamma1;  // gamma values (for soil 1?)
    std::vector<double> ks1;  // ks values for soil 1
    std::vector<double> ks2;  // ks values for soil 2
-   for (int i = 0; i < num_landslides; i++)
+   for (unsigned int i = 0; i < num_landslides; i++)
    {
       Landslide slide;
 
@@ -369,7 +369,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    Raster Pr_failure(probslope_);
    Pr_failure.nodata_value_ = -9999;
 
-   for (auto i = 0; i < num_landslides; i++)
+   for (unsigned int i = 0; i < num_landslides; i++)
    {
       Raster friction_angle(soil_type_);
       Raster permeability(soil_type_);
@@ -378,7 +378,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       Raster crb(soil_type_);
 
       // go through each raster cell
-      for (auto j = 0; j < soil_type_.attribute_.size(); j++)
+      for (size_t j = 0; j < soil_type_.attribute_.size(); j++)
       {
          if (probslope_.attribute_.at(j) != probslope_.nodata_value_) {
             // if soil 1 or 2, translate info to rasters
@@ -392,7 +392,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
             if (soil_depth_.attribute_.at(j))
             {
                // add the depth of the soil id in the raster to another raster
-               for (auto k = 0; k < soil_id_.size(); k++)
+               for (size_t k = 0; k < soil_id_.size(); k++)
                {
                   if (soil_depth_.attribute_.at(j) == soil_id_.at(k))
                   {
@@ -449,7 +449,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
       auto m = TopModel_v3(permeability,depth);
 
       auto FS = MDSTab_v2(landslide_.at(i), friction_angle, m, gamma.at(0).at(i), depth, crl, crb);
-      for (auto j = 0; j < Pr_failure.attribute_.size(); j++)
+      for (size_t j = 0; j < Pr_failure.attribute_.size(); j++)
       {
          if (probslope_.attribute_.at(j) == probslope_.nodata_value_) Pr_failure.attribute_.at(j) = Pr_failure.nodata_value_;
          else if (FS.attribute_.at(j) < 1 && FS.attribute_.at(j) > 0) {
@@ -471,5 +471,7 @@ bool Primula::GenerateLandslides(const std::string & file, const unsigned int & 
    auto finish_sli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
    std::chrono::duration<double> elapsed_sli = finish_sli - start_sli;
    std::cout << "Landslide generation elapsed time: " << elapsed_sli.count() << " s\n";
+
+   return true;
 }
 
