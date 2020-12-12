@@ -21,6 +21,3 @@ add_executable(
 )
 
 target_link_libraries(PRIMULA OpenMP::OpenMP_CXX)
-
-# Git commit hook installation
-include(CMake/GitPreCommitHook.cmake.in)

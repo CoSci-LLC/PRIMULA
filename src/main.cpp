@@ -4,32 +4,32 @@
 // Authors: Denis Cohen-Corticchiato (DOHCC)
 // Email:   denis.cohen@gmail.com
 //
-// This file is part of PRIMULA++  
+// This file is part of PRIMULA++
 // ============================================================================
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <memory>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <time.h>
-#include <memory>
 #include <string>
-#include <algorithm>
-#include <vector>
 #include <sys/stat.h>
-#include <chrono>
-#include <limits>
+#include <time.h>
+#include <unistd.h>
+#include <vector>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/uniform_01.hpp>
-#include <boost/random/lognormal_distribution.hpp>
 #include <boost/math/distributions/inverse_gamma.hpp>
+#include <boost/random/lognormal_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/variate_generator.hpp>
 
-#include "raster.hpp"
 #include "primula++.hpp"
+#include "raster.hpp"
 
 int main()
 {
@@ -47,16 +47,17 @@ int main()
    primula.dusaf_.Print("dusaf.asc", "asc", 8);
    primula.probslope_.Read("../tests/malonno/PROBSLOPE_MALONNO.asc");
    primula.probslope_.Print("probslope.asc", "asc", 8);
-   for (size_t i = 0; i < primula.probslope_.attribute_.size(); i++)
-   {
-      auto & c = primula.probslope_.attribute_.at(i);
-      if (primula.slope_.attribute_.at(i) == primula.slope_.nodata_value_) c = primula.probslope_.nodata_value_;
-      else if (c < 0) c = 1.1028656e-06;
+   for (size_t i = 0; i < primula.probslope_.attribute_.size(); i++) {
+      auto &c = primula.probslope_.attribute_.at(i);
+      if (primula.slope_.attribute_.at(i) == primula.slope_.nodata_value_)
+         c = primula.probslope_.nodata_value_;
+      else if (c < 0)
+         c = 1.1028656e-06;
    }
 
-   primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv",100);
-   primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv",100);
-   primula.pr_failure_.Print("prob_failure.asc","asc",4);
+   primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv", 100);
+   primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv", 100);
+   primula.pr_failure_.Print("prob_failure.asc", "asc", 4);
 
    return EXIT_SUCCESS;
 }
