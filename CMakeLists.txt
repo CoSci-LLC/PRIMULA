@@ -13,12 +13,14 @@ include_directories(src)
 # PRIMULA
 #==============================================================================
 add_executable(
-    PRIMULA++ 
+    PRIMULA 
     src/main.cpp 
     src/primula++.cpp
     src/raster.cpp
     src/landslide.cpp
 )
 
-target_link_libraries(PRIMULA++ OpenMP::OpenMP_CXX)
+target_link_libraries(PRIMULA OpenMP::OpenMP_CXX)
 
+# Git commit hook installation
+include(CMake/GitPreCommitHook.cmake.in)
