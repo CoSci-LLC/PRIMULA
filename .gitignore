@@ -8,3 +8,4 @@ build/
 **/slope*
 **/inv_gamma_dist.dat
 tests/*.asc
+.vscode/settings.json
