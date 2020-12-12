@@ -104,12 +104,11 @@ bool Raster::Print(const std::string &file, const std::string &format, const int
          std::cout << "  File \"" + file + "\" open failed" << std::endl;
          return false;
       }
+
       fout << "VARIABLES = \"X\" \"Y\" \"" << attribute_name_ << "\"" << std::endl;
       fout << "ZONE T = \"" << attribute_name_ << "\"" << std::endl;
       fout << std::fixed << std::setprecision(precision);
-      //   unsigned int count = 0;
-      // for (auto & it : values_)
-      // for (auto & it : points_)
+
       for (size_t i = 0; i < points_.size(); ++i) {
          fout << points_.at(i).x_ << " " << points_.at(i).y_ << " " << attribute_.at(i) << std::endl;
       }

@@ -19,12 +19,12 @@
 #include <vector>
 
 #include "primula++.hpp"
-#include <boost/math/distributions/inverse_gamma.hpp>
+// #include <boost/math/distributions/inverse_gamma.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/distributions/triangular.hpp>
 #include <boost/math/distributions/uniform.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
-#include <boost/random/lognormal_distribution.hpp>
+// #include <boost/random/lognormal_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/variate_generator.hpp>
@@ -43,7 +43,6 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
    // ... Uniform random number generator for landslides ...
    // ------------------------------------------------------
    boost::mt19937 rng; // Always same sequence for the moment
-                       // boost::mt19937 rng(std::time(0));  // Randomise generator
    static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
 
    std::cout << "Primula:ReadCSV \"" << file << "\"" << std::endl;
@@ -201,9 +200,6 @@ Raster Primula::MDSTab_v2(
                0.5 * Ka * pow(tmp_z, 2) * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.width_ * cos(delta - theta);
             auto Fnu =
                0.5 * Ka * pow(tmp_z, 2) * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.width_ * sin(delta - theta);
-            // std::cout << Fdu << " " << Fnu << "\n";
-            // std::cout << 0.5 * Ka * pow(tmp_z,2) << "\n";
-            // std::cout << pow(tmp_m,2) << "\n";
 
             // Passive force on the downslope margin
             auto Frd =
@@ -230,13 +226,10 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
 {
    // landslide_.resize(num_landslides);
 
-   // GenerateRandomUniform01(landlide_.x_, dem_.xllcorner_, dem_.yllcorner_, dem_xurcorner_, dem_.yurcorner_);
-
    // ------------------------------------------------------
    // ... Uniform random number generator for landslides ...
    // ------------------------------------------------------
    boost::mt19937 rng; // Always same sequence for the moment
-                       // boost::mt19937 rng(std::time(0));  // Randomise generator
    static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
 
    // ------------------------------------------------------

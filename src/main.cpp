@@ -7,6 +7,8 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
+#include "primula++.hpp"
+#include "raster.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -21,15 +23,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <vector>
-
-#include <boost/math/distributions/inverse_gamma.hpp>
-#include <boost/random/lognormal_distribution.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_01.hpp>
-#include <boost/random/variate_generator.hpp>
-
-#include "primula++.hpp"
-#include "raster.hpp"
 
 int main()
 {

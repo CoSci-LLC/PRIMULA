@@ -22,7 +22,6 @@
 
 #include "landslide.hpp"
 #include "raster.hpp"
-//#include "tree.hpp"
 
 class Primula
 {

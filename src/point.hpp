@@ -81,9 +81,4 @@ inline bool operator==(const Point &v1, const Point &v2)
    return (v1.x_ == v2.x_) && (v1.y_ == v2.y_);
 }
 
-// inline bool almost_equal(const Point& v1, const Point& v2, int ulp=2)
-//{
-//   return almost_equal(v1.x_, v2.x_, ulp) && almost_equal(v1.y_, v2.y_, ulp);
-//}
-
 #endif
