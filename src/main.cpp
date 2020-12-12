@@ -35,7 +35,7 @@ int main()
       for (size_t c = 0; c < primula.probslope_.nCols; c++) {
          if (primula.slope_(r, c) == primula.slope_.nodata_value)
             primula.probslope_(r, c) = primula.probslope_.nodata_value;
-         else if (c < 0)
+         else if (primula.probslope_(r, c) < 0)
             primula.probslope_(r, c) = 1.1028656e-06;
       }
    }
