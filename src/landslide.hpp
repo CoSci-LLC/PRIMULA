@@ -10,9 +10,6 @@
 #ifndef LANDSLIDE_HPP
 #define LANDSLIDE_HPP
 
-
-#include <boost/math/distributions/normal.hpp>
-
 class Landslide
 {
 public:
