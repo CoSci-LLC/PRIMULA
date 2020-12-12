@@ -10,15 +10,15 @@
 #ifndef LANDSLIDE_HPP
 #define LANDSLIDE_HPP
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <math.h>
-#include <memory>
-#include <stdio.h>
-#include <string>
-#include <unordered_map>
-#include <vector>
+// #include <fstream>
+// #include <iostream>
+// #include <map>
+// #include <math.h>
+// #include <memory>
+// #include <stdio.h>
+// #include <string>
+// #include <unordered_map>
+// #include <vector>
 
 #include <boost/math/distributions/normal.hpp>
 
