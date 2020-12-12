@@ -10,14 +10,6 @@
 #ifndef PRIMULA_HPP
 #define PRIMULA_HPP
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <math.h>
-#include <memory>
-#include <stdio.h>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "landslide.hpp"

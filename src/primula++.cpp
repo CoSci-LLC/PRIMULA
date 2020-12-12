@@ -8,15 +8,6 @@
 // ============================================================================
 
 #include <chrono>
-#include <iomanip>
-#include <iostream>
-#include <math.h>
-#include <sstream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <unistd.h>
-#include <vector>
 
 #include "primula++.hpp"
 #include <boost/math/distributions/normal.hpp>
