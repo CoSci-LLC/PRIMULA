@@ -8,21 +8,6 @@
 // ============================================================================
 
 #include "primula++.hpp"
-#include "raster.hpp"
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <memory>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <sys/stat.h>
-#include <time.h>
-#include <unistd.h>
-#include <vector>
 
 int main()
 {
