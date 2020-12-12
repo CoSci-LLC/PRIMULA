@@ -12,6 +12,7 @@ include_directories(src)
 #==============================================================================
 # PRIMULA
 #==============================================================================
+include(CMake/KiLib.cmake.in)
 add_executable(
     PRIMULA 
     src/main.cpp 
@@ -20,4 +21,4 @@ add_executable(
     src/landslide.cpp
 )
 
-target_link_libraries(PRIMULA OpenMP::OpenMP_CXX)
+target_link_libraries(PRIMULA OpenMP::OpenMP_CXX KiLib)
