@@ -10,11 +10,7 @@
 #ifndef RASTER_HPP
 #define RASTER_HPP
 
-#include <cmath>
-#include <cstdio>
 #include <fstream>
-#include <iostream>
-#include <string>
 #include <vector>
 
 #include "point.hpp"
