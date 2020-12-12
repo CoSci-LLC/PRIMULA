@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "landslide.hpp"
-#include "raster.hpp"
+#include <KiLib/KiLib.hpp>
 
 class Primula
 {
@@ -46,17 +46,17 @@ public:
 
 
    // ... Member Data ...
-   // Raster dem_;
-   Raster slope_;
-   Raster probslope_;
-   Raster twi_;
-   Raster soil_type_;
-   Raster soil_depth_;
-   Raster dusaf_;
+   // KiLib::Raster dem_;
+   KiLib::Raster slope_;
+   KiLib::Raster probslope_;
+   KiLib::Raster twi_;
+   KiLib::Raster soil_type_;
+   KiLib::Raster soil_depth_;
+   KiLib::Raster dusaf_;
    std::vector<Landslide> landslide_;
    std::vector<int> soil_id_;
    std::vector<std::vector<double>> z_;
-   Raster pr_failure_;
+   KiLib::Raster pr_failure_;
 
    std::vector<double> Crl_Fs200_;
    std::vector<double> Crl_Fs800_;
@@ -85,10 +85,10 @@ public:
    //==========================================================================
 
 private:
-   Raster TopModel_v3(const Raster &ks, const Raster &z);
-   Raster MDSTab_v2(
-      const Landslide &slide, const Raster &phi, const Raster &m, const double &gamma_s, const Raster &z,
-      const Raster &Crl, const Raster &Crb);
+   KiLib::Raster TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z);
+   KiLib::Raster MDSTab_v2(
+      const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
+      const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
 };
 
 #endif

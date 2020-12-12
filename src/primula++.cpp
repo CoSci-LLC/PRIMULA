@@ -119,44 +119,42 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
 }
 
 
-Raster Primula::TopModel_v3(const Raster &ks, const Raster &z)
+KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   Raster W(ks);
+   KiLib::Raster W(ks);
 
-   for (size_t i = 0; i < ks.attribute_.size(); i++) {
-      if (slope_.attribute_.at(i) != slope_.nodata_value_) {
-         W.attribute_.at(i) =
-            ((rainfall_ * 0.9) / (ks.attribute_.at(i) * z.attribute_.at(i) * cos(slope_.attribute_.at(i)))) *
-            twi_.attribute_.at(i);
-         if (W.attribute_.at(i) > 1)
-            W.attribute_.at(i) = 1.0;
+   for (size_t i = 0; i < ks.data.size(); i++) {
+      if (slope_.data.at(i) != slope_.nodata_value) {
+         W.data.at(i) = ((rainfall_ * 0.9) / (ks.data.at(i) * z.data.at(i) * cos(slope_.data.at(i)))) * twi_.data.at(i);
+         if (W.data.at(i) > 1)
+            W.data.at(i) = 1.0;
       } else {
-         W.attribute_.at(i) = W.nodata_value_;
+         W.data.at(i) = W.nodata_value;
       }
    }
 
    return W;
 }
 
-Raster Primula::MDSTab_v2(
-   const Landslide &slide, const Raster &phi, const Raster &m, const double &gamma_s, const Raster &z,
-   const Raster &Crl, const Raster &Crb)
+KiLib::Raster Primula::MDSTab_v2(
+   const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
+   const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
    auto gamma_w = 9810; // unit weight of water [kN/m3]
-   Raster FS(m);
+   KiLib::Raster FS(m);
 
    // calculate factor of safety for each raster cell
-   for (size_t i = 0; i < FS.attribute_.size(); i++) {
-      auto tmp_phi = phi.attribute_.at(i);
-      auto tmp_m   = m.attribute_.at(i);
-      auto tmp_z   = z.attribute_.at(i);
-      auto tmp_Crl = Crl.attribute_.at(i);
-      auto tmp_Crb = Crb.attribute_.at(i);
-      auto theta   = probslope_.attribute_.at(i);
-      auto delta   = slope_.attribute_.at(i);
+   for (size_t i = 0; i < FS.data.size(); i++) {
+      auto tmp_phi = phi.data.at(i);
+      auto tmp_m   = m.data.at(i);
+      auto tmp_z   = z.data.at(i);
+      auto tmp_Crl = Crl.data.at(i);
+      auto tmp_Crb = Crb.data.at(i);
+      auto theta   = probslope_.data.at(i);
+      auto delta   = slope_.data.at(i);
 
       // run calculation if probslope is non-empty
-      if (theta != probslope_.nodata_value_) {
+      if (theta != probslope_.nodata_value) {
          auto Fdc = gamma_s * tmp_z * sin(theta) * cos(theta) * slide.width_ * slide.length_;
          if (Fdc) {
             auto K0 = 1.0 - sin(tmp_phi);
@@ -201,7 +199,7 @@ Raster Primula::MDSTab_v2(
             auto Fnt = Fnc + Fnu - Fnd;
             auto Frb = tmp_Crb * slide.width_ * slide.length_ + Fnt * tan(tmp_phi);
 
-            FS.attribute_.at(i) = (Frb + 2 * Frl + Frd - Fdu) / Fdc;
+            FS.data.at(i) = (Frb + 2 * Frl + Frd - Fdu) / Fdc;
          }
       }
    }
@@ -362,103 +360,103 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    // ----------------------------------------------
    auto start_sli = std::chrono::high_resolution_clock::now(); // Time bi-linear interpolation
 
-   Raster Pr_failure(probslope_);
-   Pr_failure.nodata_value_ = -9999;
+   KiLib::Raster Pr_failure(probslope_);
+   Pr_failure.nodata_value = -9999;
 
    for (unsigned int i = 0; i < num_landslides; i++) {
-      Raster friction_angle(soil_type_);
-      Raster permeability(soil_type_);
-      Raster depth(soil_type_);
-      Raster crl(soil_type_);
-      Raster crb(soil_type_);
+      KiLib::Raster friction_angle(soil_type_);
+      KiLib::Raster permeability(soil_type_);
+      KiLib::Raster depth(soil_type_);
+      KiLib::Raster crl(soil_type_);
+      KiLib::Raster crb(soil_type_);
 
       // go through each raster cell
-      for (size_t j = 0; j < soil_type_.attribute_.size(); j++) {
-         if (probslope_.attribute_.at(j) != probslope_.nodata_value_) {
+      for (size_t j = 0; j < soil_type_.data.size(); j++) {
+         if (probslope_.data.at(j) != probslope_.nodata_value) {
             // if soil 1 or 2, translate info to rasters
-            if (soil_type_.attribute_.at(j)) {
+            if (soil_type_.data.at(j)) {
                // use the number to determine which element of the vector to access
-               friction_angle.attribute_.at(j) = phi.at((int)soil_type_.attribute_.at(j) - 1).at(i) * M_PI / 180.0;
-               permeability.attribute_.at(j)   = ks.at((int)soil_type_.attribute_.at(j) - 1).at(i) * M_PI / 180.0;
+               friction_angle.data.at(j) = phi.at((int)soil_type_.data.at(j) - 1).at(i) * M_PI / 180.0;
+               permeability.data.at(j)   = ks.at((int)soil_type_.data.at(j) - 1).at(i) * M_PI / 180.0;
             }
 
-            if (soil_depth_.attribute_.at(j)) {
+            if (soil_depth_.data.at(j)) {
                // add the depth of the soil id in the raster to another raster
                for (size_t k = 0; k < soil_id_.size(); k++) {
-                  if (soil_depth_.attribute_.at(j) == soil_id_.at(k)) {
-                     depth.attribute_.at(j) = z_.at(k).at(i);
+                  if (soil_depth_.data.at(j) == soil_id_.at(k)) {
+                     depth.data.at(j) = z_.at(k).at(i);
                      break;
                   }
                }
             }
 
             // copy dusaf raster, replacing codes with appropriate forest density
-            switch ((int)dusaf_.attribute_.at(j)) {
+            switch ((int)dusaf_.data.at(j)) {
             case 3211:
             case 3212:
             case 3221:
-               crl.attribute_.at(j) = Cr_grassland_.at(i);
+               crl.data.at(j) = Cr_grassland_.at(i);
                break;
             case 332:
             case 333:
-               crl.attribute_.at(j) = Cr_shrubland_.at(i);
+               crl.data.at(j) = Cr_shrubland_.at(i);
                break;
             case 3121:
-               crl.attribute_.at(j) = Crl_Pa400_.at(i);
+               crl.data.at(j) = Crl_Pa400_.at(i);
                break;
             case 3122:
-               crl.attribute_.at(j) = Crl_Pa200_.at(i);
+               crl.data.at(j) = Crl_Pa200_.at(i);
                break;
             case 31111:
-               crl.attribute_.at(j) = Crl_Fs800_.at(i);
+               crl.data.at(j) = Crl_Fs800_.at(i);
                break;
             case 31121:
-               crl.attribute_.at(j) = Crl_Fs200_.at(i);
+               crl.data.at(j) = Crl_Fs200_.at(i);
                break;
             case 3114:
             case 222:
-               crl.attribute_.at(j) = Crl_Cs150_.at(i);
+               crl.data.at(j) = Crl_Cs150_.at(i);
                break;
             case 31311:
-               crl.attribute_.at(j) = Crl_Mf600_.at(i);
+               crl.data.at(j) = Crl_Mf600_.at(i);
                break;
             case 31321:
-               crl.attribute_.at(j) = Crl_Mf300_.at(i);
+               crl.data.at(j) = Crl_Mf300_.at(i);
                break;
             default:
-               crl.attribute_.at(j) = 0;
+               crl.data.at(j) = 0;
                break;
             }
 
-            if (depth.attribute_.at(j) >= 0.5)
-               crb.attribute_.at(j) = 0;
+            if (depth.data.at(j) >= 0.5)
+               crb.data.at(j) = 0;
             else
-               crb.attribute_.at(j) = crl.attribute_.at(j);
+               crb.data.at(j) = crl.data.at(j);
          }
       }
 
       auto m = TopModel_v3(permeability, depth);
 
       auto FS = MDSTab_v2(landslide_.at(i), friction_angle, m, gamma.at(0).at(i), depth, crl, crb);
-      for (size_t j = 0; j < Pr_failure.attribute_.size(); j++) {
-         if (probslope_.attribute_.at(j) == probslope_.nodata_value_)
-            Pr_failure.attribute_.at(j) = Pr_failure.nodata_value_;
-         else if (FS.attribute_.at(j) < 1 && FS.attribute_.at(j) > 0) {
-            Pr_failure.attribute_.at(j) += FS.attribute_.at(j);
+      for (size_t j = 0; j < Pr_failure.data.size(); j++) {
+         if (probslope_.data.at(j) == probslope_.nodata_value)
+            Pr_failure.data.at(j) = Pr_failure.nodata_value;
+         else if (FS.data.at(j) < 1 && FS.data.at(j) > 0) {
+            Pr_failure.data.at(j) += FS.data.at(j);
          }
       }
    }
 
    // get average of sum of failure probabilities
-   for (auto &c : Pr_failure.attribute_) {
-      if (c != Pr_failure.nodata_value_)
+   for (auto &c : Pr_failure.data) {
+      if (c != Pr_failure.nodata_value)
          c /= num_landslides;
       else
          c = -9999;
    }
 
-   pr_failure_               = Pr_failure;
-   pr_failure_.nodata_value_ = -9999;
+   pr_failure_              = Pr_failure;
+   pr_failure_.nodata_value = -9999;
 
    auto finish_sli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
    std::chrono::duration<double> elapsed_sli = finish_sli - start_sli;

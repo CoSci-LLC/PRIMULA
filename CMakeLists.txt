@@ -17,7 +17,6 @@ add_executable(
     PRIMULA 
     src/main.cpp 
     src/primula++.cpp
-    src/raster.cpp
     src/landslide.cpp
 )
 
