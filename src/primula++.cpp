@@ -19,15 +19,11 @@
 #include <vector>
 
 #include "primula++.hpp"
-// #include <boost/math/distributions/inverse_gamma.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/distributions/triangular.hpp>
 #include <boost/math/distributions/uniform.hpp>
-#include <boost/math/special_functions/ellint_2.hpp>
-// #include <boost/random/lognormal_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
-#include <boost/random/variate_generator.hpp>
 
 Primula::Primula()
 {
