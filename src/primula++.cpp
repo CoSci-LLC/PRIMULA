@@ -7,14 +7,32 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
+#define STATS_USE_OPENMP
+
 #include <chrono>
+#include <random>
+#include <stats.hpp>
 
 #include "primula++.hpp"
-#include <boost/math/distributions/normal.hpp>
-#include <boost/math/distributions/triangular.hpp>
-#include <boost/math/distributions/uniform.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_01.hpp>
+
+/**
+ * @brief Returns the quantile of the given value in a triangular distribution
+ * 
+ * @param p The probability
+ * @param a The lower bound
+ * @param b The upper bound
+ * @param c The mode
+ * @return double The quantile
+ */
+static double qtri(const double& p, const double& a, const double& b, const double& c)
+{
+   if (p < c)
+      return a + std::sqrt((b-a)*(c-a)*p);
+   else if (p > c)
+      return b - std::sqrt((b-a)*(b-c)*(1-p));
+   
+   return c;
+}
 
 Primula::Primula()
 {
@@ -26,12 +44,6 @@ Primula::~Primula()
 
 bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslides)
 {
-   // ------------------------------------------------------
-   // ... Uniform random number generator for landslides ...
-   // ------------------------------------------------------
-   boost::mt19937 rng; // Always same sequence for the moment
-   static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
-
    std::cout << "Primula:ReadCSV \"" << file << "\"" << std::endl;
 
    // Open data file
@@ -104,10 +116,9 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
          auto max_z = prof / 100.0;
 
          std::vector<double> rand;
-         boost::math::triangular_distribution<> tri((2.0 / 3.0) * max_z, (3.0 / 4.0) * max_z, max_z);
 
          for (unsigned int i = 0; i < num_landslides; i++) {
-            rand.push_back(quantile(tri, rng_uniform_01()));
+            rand.push_back(qtri(stats::runif(0, 1), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
          }
          z_.push_back(rand);
       }
@@ -209,34 +220,6 @@ KiLib::Raster Primula::MDSTab_v2(
 
 bool Primula::GenerateLandslides(const std::string &file, const unsigned int &num_landslides)
 {
-   // landslide_.resize(num_landslides);
-
-   // ------------------------------------------------------
-   // ... Uniform random number generator for landslides ...
-   // ------------------------------------------------------
-   boost::mt19937 rng; // Always same sequence for the moment
-   static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
-
-   // ------------------------------------------------------
-   // ... uniform distribution functions ...
-   // ------------------------------------------------------
-   boost::math::uniform_distribution<> rng_phi1(30, 40);
-   boost::math::uniform_distribution<> rng_phi2(35, 40);
-   boost::math::uniform_distribution<> rng_gamma(17, 19);
-   boost::math::uniform_distribution<> rng_ks(0.5, 100);
-   boost::math::uniform_distribution<> rng_cr_grass(5, 7.5);
-   boost::math::uniform_distribution<> rng_cr_shrub(0, 15);
-
-   // --------------------------------------------------------
-   // ... normal distribution for landslide area ...
-   // --------------------------------------------------------
-   boost::math::normal_distribution<> rng_area(area_mu_, area_sigma_);
-
-   // --------------------------------------------------------
-   // ... normal distribution for length-to-width ratio ...
-   // --------------------------------------------------------
-   boost::math::normal_distribution<> rng_l2w(l2w_mu_, l2w_sigma_);
-
    // ----------------------------------------------
    // ... Generate soil properties ...
    // ... Generate random data ...
@@ -318,15 +301,16 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
       Landslide slide;
 
       // generate random soil properties
-      phi1.push_back(quantile(rng_phi1, rng_uniform_01()));
-      phi2.push_back(quantile(rng_phi2, rng_uniform_01()));
-      gamma1.push_back(quantile(rng_gamma, rng_uniform_01()) * 1000);
-      ks1.push_back(quantile(rng_ks, rng_uniform_01()));
-      ks2.push_back(quantile(rng_ks, rng_uniform_01()));
+
+      phi1.push_back(stats::qunif(stats::runif(0, 1), 30, 40));
+      phi2.push_back(stats::qunif(stats::runif(0, 1), 35, 40));
+      gamma1.push_back(stats::qunif(stats::runif(0, 1), 17, 19) * 1000);
+      ks1.push_back(stats::qunif(stats::runif(0, 1), 0.5, 100));
+      ks2.push_back(stats::qunif(stats::runif(0, 1), 0.5, 100));
 
       // generate random landslide properties
-      slide.area_   = pow(10, quantile(rng_area, rng_uniform_01()));
-      auto l2w      = pow(10, quantile(rng_l2w, rng_uniform_01()));
+      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1), area_mu_, area_sigma_));
+      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1), l2w_mu_, l2w_sigma_));
       slide.width_  = sqrt((slide.area_ * 1.0) / (l2w * 1.0));
       slide.length_ = slide.width_ * l2w;
       landslide_.push_back(slide);
@@ -341,8 +325,8 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
       Crl_Mf600_.push_back(Mf600.at(n));
       Crl_Cs150_.push_back(Cs150.at(n));
 
-      Cr_grassland_.push_back(quantile(rng_cr_grass, rng_uniform_01()) * 1000);
-      Cr_shrubland_.push_back(quantile(rng_cr_shrub, rng_uniform_01()) * 1000);
+      Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1), 5, 7.5) * 1000);
+      Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1), 0, 15) * 1000);
    }
    // add to vector for easier access
    phi.push_back(phi1);
