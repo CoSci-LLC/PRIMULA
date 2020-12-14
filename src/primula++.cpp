@@ -8,6 +8,8 @@
 // ============================================================================
 
 #include <chrono>
+#include <spdlog/spdlog.h>
+#include <spdlog/stopwatch.h>
 
 #include "primula++.hpp"
 #include <boost/math/distributions/normal.hpp>
@@ -32,13 +34,17 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
    boost::mt19937 rng; // Always same sequence for the moment
    static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
 
-   std::cout << "Primula:ReadCSV \"" << file << "\"" << std::endl;
+
+   // std::cout << "Primula:ReadCSV \"" << file << "\"" << std::endl;
+
+   spdlog::info("Primula::ReadCSV \"{}\" Start\n", file);
 
    // Open data file
    std::ifstream fin;
    fin.open(file);
    if (!fin.is_open()) {
-      std::cerr << "  File \"" + file + "\" open failed" << std::endl;
+      // std::cerr << "  File \"" + file + "\" open failed" << std::endl;
+      spdlog::critical("File \"{}\" failed to open\n", file);
       return false;
    }
 
@@ -114,7 +120,8 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
    }
 
    fin.close();
-   std::cout << "Primula:ReadCSV ... Done" << std::endl;
+   spdlog::info("Primula::ReadCSV \"{}\" End\n", file);
+   // std::cout << "Primula:ReadCSV ... Done" << std::endl;
    return true;
 }
 
@@ -241,13 +248,13 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    // ... Generate soil properties ...
    // ... Generate random data ...
    // ----------------------------------------------
-   auto start_rng = std::chrono::high_resolution_clock::now(); // Time loop
+   spdlog::stopwatch sw;
 
    // Open data file
    std::ifstream fin;
    fin.open(file);
    if (!fin.is_open()) {
-      std::cerr << "  File \"" + file + "\" open failed" << std::endl;
+      spdlog::critical("File \"{}\" failed to open\n", file);
       return false;
    }
 
@@ -351,16 +358,13 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    ks.push_back(ks1);
    ks.push_back(ks2);
 
-   auto finish_rng = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
-   std::chrono::duration<double> elapsed_rng = finish_rng - start_rng;
-   std::cout << "Soil generation elapsed time: " << elapsed_rng.count() << " s\n";
+   spdlog::info("Soil generation elapsed time: {}", sw);
+   sw.reset()
 
-   // ----------------------------------------------
-   // ... Landslide generation ...
-   // ----------------------------------------------
-   auto start_sli = std::chrono::high_resolution_clock::now(); // Time bi-linear interpolation
-
-   KiLib::Raster Pr_failure(probslope_);
+      // ----------------------------------------------
+      // ... Landslide generation ...
+      // ----------------------------------------------
+      KiLib::Raster Pr_failure(probslope_);
    Pr_failure.nodata_value = -9999;
 
    for (unsigned int i = 0; i < num_landslides; i++) {
@@ -458,9 +462,7 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    pr_failure_              = Pr_failure;
    pr_failure_.nodata_value = -9999;
 
-   auto finish_sli = std::chrono::high_resolution_clock::now(); // End time bi-linear interpolation
-   std::chrono::duration<double> elapsed_sli = finish_sli - start_sli;
-   std::cout << "Landslide generation elapsed time: " << elapsed_sli.count() << " s\n";
+   spdlog::info("Landslide generation elapsed time: {}", sw);
 
    return true;
 }
