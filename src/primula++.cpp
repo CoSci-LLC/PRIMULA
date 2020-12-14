@@ -359,12 +359,12 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    ks.push_back(ks2);
 
    spdlog::info("Soil generation elapsed time: {}", sw);
-   sw.reset()
+   sw.reset();
 
-      // ----------------------------------------------
-      // ... Landslide generation ...
-      // ----------------------------------------------
-      KiLib::Raster Pr_failure(probslope_);
+   // ----------------------------------------------
+   // ... Landslide generation ...
+   // ----------------------------------------------
+   KiLib::Raster Pr_failure(probslope_);
    Pr_failure.nodata_value = -9999;
 
    for (unsigned int i = 0; i < num_landslides; i++) {
