@@ -5,24 +5,31 @@
 
 namespace fs = std::filesystem;
 
-// Checks if a path exists and exits if it doesnt
-void pathExists(std::string argName, std::string path);
-
 Config::Config(int argc, char **argv)
 {
    parser.set_config("--config");
    parser.config_formatter(std::make_shared<CLI::ConfigTOML>());
 
    // clang-format off
-   parser.add_option("--slopePath",     this->slopePath,     "Path to elevation data")->check(CLI::ExistingFile);
-   parser.add_option("--twiPath",       this->twiPath,       "Path to contributing area data")->check(CLI::ExistingFile);
-   parser.add_option("--soilTypePath",  this->soilTypePath,  "Path to tree file (empty for no trees)")->check(CLI::ExistingFile);
-   parser.add_option("--soilDepthPath", this->soilDepthPath, "Path to output directory")->check(CLI::ExistingFile);
-   parser.add_option("--dusafPath",     this->dusafPath,     "Path to output directory")->check(CLI::ExistingFile);
-   parser.add_option("--probslopePath", this->probslopePath, "Path to output directory")->check(CLI::ExistingFile);
-   parser.add_option("--outputPath",    this->outputPath,    "Path to output directory")->check(CLI::NonexistentPath);
+   parser.add_option("--slopePath",     this->slopePath,     "Path to slope data")->check(CLI::ExistingFile);
+   parser.add_option("--twiPath",       this->twiPath,       "Path to TWI data")->check(CLI::ExistingFile);
+   parser.add_option("--soilTypePath",  this->soilTypePath,  "Path to soil type data")->check(CLI::ExistingFile);
+   parser.add_option("--soilDepthPath", this->soilDepthPath, "Path to soil depth data")->check(CLI::ExistingFile);
+   parser.add_option("--dusafPath",     this->dusafPath,     "Path to dusaf data")->check(CLI::ExistingFile);
+   parser.add_option("--probslopePath", this->probslopePath, "Path to probslope data")->check(CLI::ExistingFile);
+   parser.add_option("--outputPath",    this->outputPath,    "Path to output directory");
    // clang-format on
 
+   try {
+      parser.parse(argc, argv);
+   } catch (const CLI::ParseError &e) {
+      parser.exit(e);
+      std::cout << "\nDumping config to default_config.toml" << std::endl;
+      this->dumpConfigFile("default_config.toml");
+      exit(EXIT_FAILURE);
+   }
+
+   fs::create_directories(this->outputPath);
    std::ofstream outFile = std::ofstream(fs::path(this->outputPath) / fs::path("config.toml"));
    outFile << parser.config_to_str(true, true);
    outFile.close();
@@ -32,12 +39,12 @@ Primula Config::configModel()
 {
    Primula model;
 
-   model.slope_ = KiLib::Raster("../tests/malonno/slope_MALONNO.asc");
-   model.twi_ = KiLib::Raster("../tests/malonno/twi_MALONNO.asc");
-   model.soil_type_ = KiLib::Raster("../tests/malonno/soils_MALONNO_v2.asc");
-   model.soil_depth_ = KiLib::Raster("../tests/malonno/soils_MALONNO.asc");
-   model.dusaf_ = KiLib::Raster("../tests/malonno/dusaf_MALONNO.asc");
-   model.probslope_ = KiLib::Raster("../tests/malonno/PROBSLOPE_MALONNO.asc");
+   model.slope_      = KiLib::Raster(this->slopePath);
+   model.twi_        = KiLib::Raster(this->twiPath);
+   model.soil_type_  = KiLib::Raster(this->soilTypePath);
+   model.soil_depth_ = KiLib::Raster(this->soilDepthPath);
+   model.dusaf_      = KiLib::Raster(this->dusafPath);
+   model.probslope_  = KiLib::Raster(this->probslopePath);
 
    return model;
 }
@@ -63,12 +70,4 @@ void Config::dumpConfigFile(std::string path)
          fmt::print(outFile, "{} = {}\n\n", opt->get_lnames()[0], opt->get_default_str());
    }
    outFile.close();
-}
-
-void pathExists(std::string argName, std::string path)
-{
-   if (fs::exists(path) == false) {
-      std::cerr << fmt::format("{}: the file `{}` does not exist!\n", argName, path);
-      exit(EXIT_FAILURE);
-   }
 }

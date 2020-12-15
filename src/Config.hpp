@@ -11,6 +11,8 @@ public:
 
    Primula configModel();
 
+   std::string outputPath;
+
 private:
    std::string slopePath;
    std::string twiPath;
@@ -18,8 +20,6 @@ private:
    std::string soilDepthPath;
    std::string dusafPath;
    std::string probslopePath;
-
-   std::string outputPath;
 
    void dumpConfigFile(std::string path);
 

@@ -8,13 +8,15 @@
 // ============================================================================
 
 #include <Config.hpp>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 int main(int argc, char **argv)
 {
    Config config(argc, argv);
 
    Primula model = config.configModel();
-
 
    for (size_t r = 0; r < model.probslope_.nRows; r++) {
       for (size_t c = 0; c < model.probslope_.nCols; c++) {
@@ -27,7 +29,8 @@ int main(int argc, char **argv)
 
    model.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv", 100);
    model.GenerateLandslides("../tests/malonno/RootReinforcement.csv", 100);
-   model.pr_failure_.writeToFile("prob_failure.asc");
 
+   model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
+   
    return EXIT_SUCCESS;
 }
