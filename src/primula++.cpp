@@ -16,6 +16,8 @@
 #include <spdlog/stopwatch.h>
 #include "primula++.hpp"
 
+std::mt19937_64 engine(69420); // Engine so our seed is consistent
+
 /**
  * @brief Returns the quantile of the given value in a triangular distribution
  * 
@@ -224,7 +226,6 @@ void Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    // ... Generate soil properties ...
    // ... Generate random data ...
    // ----------------------------------------------
-   std::mt19937_64 engine(69420); // Engine so our seed is consistent
    spdlog::stopwatch sw;
 
    // Open data file
