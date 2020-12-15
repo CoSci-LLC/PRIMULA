@@ -45,12 +45,6 @@ Primula::~Primula()
 
 void Primula::ReadCSV(const std::string &file, const unsigned int &num_landslides)
 {
-   // ------------------------------------------------------
-   // ... Uniform random number generator for landslides ...
-   // ------------------------------------------------------
-   boost::mt19937 rng; // Always same sequence for the moment
-   static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
-
    spdlog::info("Primula::ReadCSV '{}' Start", file);
 
    // Open data file
