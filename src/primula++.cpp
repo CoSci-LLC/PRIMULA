@@ -9,37 +9,33 @@
 
 #define STATS_USE_OPENMP
 
+#include "primula++.hpp"
 #include <chrono>
 #include <random>
-#include <stats.hpp>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
-#include "primula++.hpp"
+#include <stats.hpp>
 
 /**
  * @brief Returns the quantile of the given value in a triangular distribution
- * 
+ *
  * @param p The probability
  * @param a The lower bound
  * @param b The upper bound
  * @param c The mode
  * @return double The quantile
  */
-static double qtri(const double& p, const double& a, const double& b, const double& c)
+static double qtri(const double &p, const double &a, const double &b, const double &c)
 {
    if (p < c)
-      return a + std::sqrt((b-a)*(c-a)*p);
+      return a + std::sqrt((b - a) * (c - a) * p);
    else if (p > c)
-      return b - std::sqrt((b-a)*(b-c)*(1-p));
-   
+      return b - std::sqrt((b - a) * (b - c) * (1 - p));
+
    return c;
 }
 
 Primula::Primula()
-{
-}
-
-Primula::~Primula()
 {
 }
 
