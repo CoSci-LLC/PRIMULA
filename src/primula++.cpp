@@ -34,18 +34,14 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
    boost::mt19937 rng; // Always same sequence for the moment
    static boost::uniform_01<boost::mt19937> rng_uniform_01(rng);
 
-
-   // std::cout << "Primula:ReadCSV \"" << file << "\"" << std::endl;
-
-   spdlog::info("Primula::ReadCSV \"{}\" Start\n", file);
+   spdlog::info("Primula::ReadCSV '{}' Start", file);
 
    // Open data file
    std::ifstream fin;
    fin.open(file);
    if (!fin.is_open()) {
-      // std::cerr << "  File \"" + file + "\" open failed" << std::endl;
-      spdlog::critical("File \"{}\" failed to open\n", file);
-      return false;
+      spdlog::error("File '{}' failed to open", file);
+      exit(EXIT_FAILURE);
    }
 
    std::string line;
@@ -120,8 +116,7 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
    }
 
    fin.close();
-   spdlog::info("Primula::ReadCSV \"{}\" End\n", file);
-   // std::cout << "Primula:ReadCSV ... Done" << std::endl;
+   spdlog::info("Primula::ReadCSV '{}' End", file);
    return true;
 }
 
@@ -254,8 +249,8 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    std::ifstream fin;
    fin.open(file);
    if (!fin.is_open()) {
-      spdlog::critical("File \"{}\" failed to open\n", file);
-      return false;
+      spdlog::error("File '{}' failed to open", file);
+      exit(EXIT_FAILURE);
    }
 
    unsigned int count = 0;
