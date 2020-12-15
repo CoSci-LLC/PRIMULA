@@ -16,7 +16,6 @@
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
 
-std::mt19937_64 engine(69420); // Engine so our seed is consistent
 
 /**
  * @brief Returns the quantile of the given value in a triangular distribution
@@ -37,8 +36,9 @@ static double qtri(const double &p, const double &a, const double &b, const doub
    return c;
 }
 
-Primula::Primula()
+Primula::Primula(size_t seed)
 {
+   this->engine = std::mt19937_64(seed); // this->Engine so our seed is consistent
 }
 
 void Primula::ReadCSV(const std::string &file, const unsigned int &num_landslides)
@@ -117,7 +117,7 @@ void Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
          std::vector<double> rand;
 
          for (unsigned int i = 0; i < num_landslides; i++) {
-            rand.push_back(qtri(stats::runif(0, 1, engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
+            rand.push_back(qtri(stats::runif(0, 1, this->engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
          }
          z_.push_back(rand);
       }
@@ -300,15 +300,15 @@ void Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
 
       // generate random soil properties
 
-      phi1.push_back(stats::qunif(stats::runif(0, 1, engine), 30, 40));
-      phi2.push_back(stats::qunif(stats::runif(0, 1, engine), 35, 40));
-      gamma1.push_back(stats::qunif(stats::runif(0, 1, engine), 17, 19) * 1000);
-      ks1.push_back(stats::qunif(stats::runif(0, 1, engine), 0.5, 100));
-      ks2.push_back(stats::qunif(stats::runif(0, 1, engine), 0.5, 100));
+      phi1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 30, 40));
+      phi2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 35, 40));
+      gamma1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 17, 19) * 1000);
+      ks1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
+      ks2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
 
       // generate random landslide properties
-      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, engine), area_mu_, area_sigma_));
-      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, engine), l2w_mu_, l2w_sigma_));
+      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), area_mu_, area_sigma_));
+      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), l2w_mu_, l2w_sigma_));
       slide.width_  = sqrt((slide.area_ * 1.0) / (l2w * 1.0));
       slide.length_ = slide.width_ * l2w;
       landslide_.push_back(slide);
@@ -323,8 +323,8 @@ void Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
       Crl_Mf600_.push_back(Mf600.at(n));
       Crl_Cs150_.push_back(Cs150.at(n));
 
-      Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, engine), 5, 7.5) * 1000);
-      Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, engine), 0, 15) * 1000);
+      Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 5, 7.5) * 1000);
+      Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0, 15) * 1000);
    }
    // add to vector for easier access
    phi.push_back(phi1);

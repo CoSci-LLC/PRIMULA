@@ -17,6 +17,8 @@ Config::Config(int argc, char **argv)
    parser.add_option("--soilDepthPath", this->soilDepthPath, "Path to soil depth data")->check(CLI::ExistingFile);
    parser.add_option("--dusafPath",     this->dusafPath,     "Path to dusaf data")->check(CLI::ExistingFile);
    parser.add_option("--probslopePath", this->probslopePath, "Path to probslope data")->check(CLI::ExistingFile);
+   parser.add_option("--seed",          this->seed,          "Seed for RNG", true);
+
    parser.add_option("--outputPath",    this->outputPath,    "Path to output directory");
    // clang-format on
 
@@ -37,7 +39,7 @@ Config::Config(int argc, char **argv)
 
 Primula Config::configModel()
 {
-   Primula model;
+   Primula model(this->seed);
 
    model.slope_      = KiLib::Raster(this->slopePath);
    model.twi_        = KiLib::Raster(this->twiPath);
