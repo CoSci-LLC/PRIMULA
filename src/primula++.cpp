@@ -26,7 +26,7 @@ Primula::~Primula()
 {
 }
 
-bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslides)
+void Primula::ReadCSV(const std::string &file, const unsigned int &num_landslides)
 {
    // ------------------------------------------------------
    // ... Uniform random number generator for landslides ...
@@ -117,7 +117,6 @@ bool Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
 
    fin.close();
    spdlog::info("Primula::ReadCSV '{}' End", file);
-   return true;
 }
 
 
@@ -209,7 +208,7 @@ KiLib::Raster Primula::MDSTab_v2(
    return FS;
 }
 
-bool Primula::GenerateLandslides(const std::string &file, const unsigned int &num_landslides)
+void Primula::GenerateLandslides(const std::string &file, const unsigned int &num_landslides)
 {
    // landslide_.resize(num_landslides);
 
@@ -458,6 +457,4 @@ bool Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    pr_failure_.nodata_value = -9999;
 
    spdlog::info("Landslide generation elapsed time: {}", sw);
-
-   return true;
 }

@@ -33,8 +33,8 @@ public:
    //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
-   bool GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
-   bool ReadCSV(const std::string &file, const unsigned int &num_landslides);
+   void GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
+   void ReadCSV(const std::string &file, const unsigned int &num_landslides);
    // void FindFOS();
 
    // ... Static Member Data ...
