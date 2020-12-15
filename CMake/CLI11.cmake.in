@@ -1,0 +1,4 @@
+# Install catch dependency.
+file(DOWNLOAD https://github.com/CLIUtils/CLI11/releases/download/v1.9.1/CLI11.hpp ${CMAKE_CURRENT_BINARY_DIR}/CLI11.hpp)
+add_library(CLI11 INTERFACE)
+target_include_directories(CLI11 INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
