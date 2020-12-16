@@ -169,8 +169,7 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
    ss.str(line);
 
    while (ss.good() && getline(ss, word, ',')) {
-      if (word.find("COD_UTS1") || word.find("PROF_UTILE"))
-         col_pos[word] = count;
+      col_pos[word] = count;
       count++;
    }
 
@@ -202,7 +201,8 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
             else if (count == col_pos["PROF_UTILE"])
                prof = std::stoi(line.substr(last, it - last));
 
-            last = ++it;
+            state = '\n';
+            last = it + 1;
             count++;
             break;
          }
@@ -286,7 +286,7 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
             else if (count == col_pos["Cs150"])
                this->Cs150.emplace_back(std::stod(line.substr(last, it - last)));
 
-            last = ++it;
+            last = it + 1;
             count++;
             break;
          }
