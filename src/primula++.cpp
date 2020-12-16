@@ -353,11 +353,11 @@ void Primula::CalculateSafetyFactor()
    this->pr_failure_ = KiLib::Raster::zerosLike(this->probslope_);
 
    for (size_t i = 0; i < this->num_landslides; i++) {
-      KiLib::Raster friction_angle(this->soil_type_);
-      KiLib::Raster permeability(this->soil_type_);
-      KiLib::Raster depth(this->soil_type_);
-      KiLib::Raster crl(this->soil_type_);
-      KiLib::Raster crb(this->soil_type_);
+      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->soil_type_);
 
       // go through each raster cell
       for (size_t j = 0; j < this->soil_type_.data.size(); j++) {
