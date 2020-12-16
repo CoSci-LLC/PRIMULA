@@ -18,6 +18,8 @@
 #include <string>
 #include <unordered_map>
 
+std::mt19937_64 engine(69420); // Engine so our seed is consistent
+
 /**
  * @brief Returns the quantile of the given value in a triangular distribution
  *
@@ -183,6 +185,9 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
       prof  = -1;
 
       for (size_t it = 0; it < line.size(); it++) {
+         if (count > 0)
+            spdlog::debug("{}\t{}\t{}", line.size(), line.substr(last, it - last), it - last);
+
          switch (line[it]) {
          // Check if it is necessary to consider quataion
          case '"':
@@ -207,7 +212,7 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
             break;
          }
 
-         if (count >= std::max(col_pos["COD_UTS1"], col_pos["PROF_UTILE"]))
+         if (count > std::max(col_pos["COD_UTS1"], col_pos["PROF_UTILE"]))
             break;
       }
 
@@ -218,7 +223,7 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
          std::vector<double> rand;
 
          for (unsigned int i = 0; i < num_landslides; i++) {
-            rand.push_back(qtri(stats::runif(0, 1), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
+            rand.push_back(qtri(stats::runif(0, 1, engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
          }
          this->z_.push_back(rand);
       }
@@ -272,19 +277,19 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
                break;
          case '\n':
             if (count == col_pos["Pa400"])
-               this->Pa400.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Pa400.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
             else if (count == col_pos["Pa200"])
-               this->Pa200.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Pa200.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
             else if (count == col_pos["Fs200"])
-               this->Fs200.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Fs200.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
             else if (count == col_pos["Fs800"])
-               this->Fs800.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Fs800.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
             else if (count == col_pos["MF300"])
-               this->Mf300.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Mf300.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
             else if (count == col_pos["MF600"])
-               this->Mf600.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Mf600.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
             else if (count == col_pos["Cs150"])
-               this->Cs150.emplace_back(std::stod(line.substr(last, it - last)));
+               this->Cs150.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
 
             last = it + 1;
             count++;
@@ -314,15 +319,15 @@ void Primula::GenerateSoilProperties()
 
       // generate random soil properties
 
-      this->phi1.push_back(stats::qunif(stats::runif(0, 1), 30, 40));
-      this->phi2.push_back(stats::qunif(stats::runif(0, 1), 35, 40));
-      this->gamma1.push_back(stats::qunif(stats::runif(0, 1), 17, 19) * 1000);
-      this->ks1.push_back(stats::qunif(stats::runif(0, 1), 0.5, 100));
-      this->ks2.push_back(stats::qunif(stats::runif(0, 1), 0.5, 100));
+      this->phi1.push_back(stats::qunif(stats::runif(0, 1, engine), 30, 40));
+      this->phi2.push_back(stats::qunif(stats::runif(0, 1, engine), 35, 40));
+      this->gamma1.push_back(stats::qunif(stats::runif(0, 1, engine), 17, 19) * 1000);
+      this->ks1.push_back(stats::qunif(stats::runif(0, 1, engine), 0.5, 100));
+      this->ks2.push_back(stats::qunif(stats::runif(0, 1, engine), 0.5, 100));
 
       // generate random landslide properties
-      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1), this->area_mu_, this->area_sigma_));
-      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1), this->l2w_mu_, this->l2w_sigma_));
+      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, engine), this->area_mu_, this->area_sigma_));
+      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, engine), this->l2w_mu_, this->l2w_sigma_));
       slide.width_  = sqrt((slide.area_ * 1.0) / (l2w * 1.0));
       slide.length_ = slide.width_ * l2w;
       this->landslide_.push_back(slide);
@@ -337,8 +342,8 @@ void Primula::GenerateSoilProperties()
       this->Crl_Mf600_.push_back(this->Mf600.at(n));
       this->Crl_Cs150_.push_back(this->Cs150.at(n));
 
-      this->Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1), 5, 7.5) * 1000);
-      this->Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1), 0, 15) * 1000);
+      this->Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, engine), 5, 7.5) * 1000);
+      this->Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, engine), 0, 15) * 1000);
    }
 
    spdlog::info("Soil generation elapsed time: {}", sw);

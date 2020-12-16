@@ -11,6 +11,8 @@
 
 int main()
 {
+   spdlog::set_level(spdlog::level::debug);
+
    Primula primula(100);
 
    primula.slope_ = KiLib::Raster("../tests/malonno/slope_MALONNO.asc");
