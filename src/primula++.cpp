@@ -205,7 +205,7 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
                prof = std::stoi(line.substr(last, it - last));
 
             state = '\n';
-            last = it + 1;
+            last  = it + 1;
             count++;
             break;
          }
@@ -393,26 +393,26 @@ void Primula::CalculateSafetyFactor()
                crl.data.at(j) = Cr_shrubland_.at(i);
                break;
             case 3121:
-               crl.data.at(j) = this->Pa400[this->iteration_index[i]];//Crl_Pa400_.at(i);
+               crl.data.at(j) = this->Pa400[this->iteration_index[i]]; // Crl_Pa400_.at(i);
                break;
             case 3122:
-               crl.data.at(j) = this->Pa200[this->iteration_index[i]];//Crl_Pa200_.at(i);
+               crl.data.at(j) = this->Pa200[this->iteration_index[i]]; // Crl_Pa200_.at(i);
                break;
             case 31111:
-               crl.data.at(j) = this->Fs800[this->iteration_index[i]];//Crl_Fs800_.at(i);
+               crl.data.at(j) = this->Fs800[this->iteration_index[i]]; // Crl_Fs800_.at(i);
                break;
             case 31121:
-               crl.data.at(j) = this->Fs200[this->iteration_index[i]];//Crl_Fs200_.at(i);
+               crl.data.at(j) = this->Fs200[this->iteration_index[i]]; // Crl_Fs200_.at(i);
                break;
             case 3114:
             case 222:
-               crl.data.at(j) = this->Cs150[this->iteration_index[i]];//Crl_Cs150_.at(i);
+               crl.data.at(j) = this->Cs150[this->iteration_index[i]]; // Crl_Cs150_.at(i);
                break;
             case 31311:
-               crl.data.at(j) = this->Mf600[this->iteration_index[i]];//Crl_Mf600_.at(i);
+               crl.data.at(j) = this->Mf600[this->iteration_index[i]]; // Crl_Mf600_.at(i);
                break;
             case 31321:
-               crl.data.at(j) = this->Mf300[this->iteration_index[i]];//Crl_Mf300_.at(i);
+               crl.data.at(j) = this->Mf300[this->iteration_index[i]]; // Crl_Mf300_.at(i);
                break;
             default:
                crl.data.at(j) = 0;

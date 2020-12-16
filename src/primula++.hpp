@@ -82,7 +82,6 @@ public:
    //==========================================================================
 
 private:
-
    std::vector<size_t> iteration_index;
 
    std::vector<double> Pa400;
