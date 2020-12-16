@@ -21,7 +21,9 @@ public:
    //==========================================================================
    // ... Constructors, Destructors ...
    //==========================================================================
-   Primula(int n) : num_landslides(n) {}
+   Primula(int n) : num_landslides(n)
+   {
+   }
 
    ~Primula();
 
@@ -35,9 +37,7 @@ public:
    //==========================================================================
    void GenerateSoilProperties();
    void CalculateSafetyFactor();
-   // void GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
-   // void ReadCSV(const std::string &file, const unsigned int &num_landslides);
-   void ReadSoilDataset(const std::string& soil_data, const std::string& root_data);
+   void ReadSoilDataset(const std::string &soil_data, const std::string &root_data);
    // void FindFOS();
 
    // ... Static Member Data ...
@@ -89,7 +89,6 @@ public:
    //==========================================================================
 
 private:
-
    std::vector<double> Pa400;
    std::vector<double> Pa200;
    std::vector<double> Fs800;
