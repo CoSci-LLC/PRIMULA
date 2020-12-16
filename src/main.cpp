@@ -11,7 +11,7 @@
 
 int main()
 {
-   Primula primula;
+   Primula primula(100);
 
    primula.slope_ = KiLib::Raster("../tests/malonno/slope_MALONNO.asc");
    primula.slope_.writeToFile("slope.asc");
@@ -40,8 +40,9 @@ int main()
       }
    }
 
-   primula.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv", 100);
-   primula.GenerateLandslides("../tests/malonno/RootReinforcement.csv", 100);
+   primula.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
+   primula.GenerateSoilProperties();
+   primula.CalculateSafetyFactor();
    primula.pr_failure_.writeToFile("prob_failure.asc");
 
    return EXIT_SUCCESS;

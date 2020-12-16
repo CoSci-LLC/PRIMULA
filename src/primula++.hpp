@@ -21,7 +21,7 @@ public:
    //==========================================================================
    // ... Constructors, Destructors ...
    //==========================================================================
-   Primula();
+   Primula(int n) : num_landslides(n) {}
 
    ~Primula();
 
@@ -33,8 +33,11 @@ public:
    //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
-   void GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
-   void ReadCSV(const std::string &file, const unsigned int &num_landslides);
+   void GenerateSoilProperties();
+   void CalculateSafetyFactor();
+   // void GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
+   // void ReadCSV(const std::string &file, const unsigned int &num_landslides);
+   void ReadSoilDataset(const std::string& soil_data, const std::string& root_data);
    // void FindFOS();
 
    // ... Static Member Data ...
@@ -46,7 +49,8 @@ public:
 
 
    // ... Member Data ...
-   // KiLib::Raster dem_;
+   size_t num_landslides;
+
    KiLib::Raster slope_;
    KiLib::Raster probslope_;
    KiLib::Raster twi_;
@@ -85,6 +89,21 @@ public:
    //==========================================================================
 
 private:
+
+   std::vector<double> Pa400;
+   std::vector<double> Pa200;
+   std::vector<double> Fs800;
+   std::vector<double> Fs200;
+   std::vector<double> Cs150;
+   std::vector<double> Mf600;
+   std::vector<double> Mf300;
+
+   std::vector<double> phi1;
+   std::vector<double> phi2;
+   std::vector<double> gamma1;
+   std::vector<double> ks1;
+   std::vector<double> ks2;
+
    KiLib::Raster TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTab_v2(
       const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
