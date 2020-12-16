@@ -1,3 +1,4 @@
+#pragma once
 // ============================================================================
 // Copyright (C) PRIMULA. All rights reserved.
 //
@@ -7,13 +8,11 @@
 // This file is part of PRIMULA
 // ============================================================================
 
-#ifndef PRIMULA_HPP
-#define PRIMULA_HPP
-
 #include <vector>
 
-#include "landslide.hpp"
+#include <landslide.hpp>
 #include <KiLib/KiLib.hpp>
+#include <random>
 
 class Primula
 {
@@ -21,32 +20,15 @@ public:
    //==========================================================================
    // ... Constructors, Destructors ...
    //==========================================================================
-   Primula();
-
-   ~Primula();
-
-   //==========================================================================
-   // ... Public Accessor Functions ...
-   //==========================================================================
-
+   Primula(size_t seed);
 
    //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
    void GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
    void ReadCSV(const std::string &file, const unsigned int &num_landslides);
-   // void FindFOS();
-
-   // ... Static Member Data ...
-   static constexpr double gravity_        = 9.81;         // [m/s^2]
-   static constexpr double soil_density_   = 1834.8624;    // [kg/m^3] Schwarz M. R Code
-   static constexpr double transmissivity_ = 0.0002644655; // [m/s] Fixed for the moment. From R code
-   static constexpr double rain_intensity_ =
-      0.001 * 70 / 3600; // [m/s] >> Eventually should live outside of primula class <<
-
 
    // ... Member Data ...
-   // KiLib::Raster dem_;
    KiLib::Raster slope_;
    KiLib::Raster probslope_;
    KiLib::Raster twi_;
@@ -67,7 +49,7 @@ public:
    std::vector<double> Crl_Cs150_;
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
-
+   
    double veg_weight_ = 70.0;  // [kg/m2]
    double rainfall_   = 0.100; // [m/day]
 
@@ -85,10 +67,10 @@ public:
    //==========================================================================
 
 private:
+   std::mt19937_64 engine; // Engine so our can be consistent
+
    KiLib::Raster TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTab_v2(
       const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
       const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
 };
-
-#endif
