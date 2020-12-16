@@ -185,8 +185,6 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
       prof  = -1;
 
       for (size_t it = 0; it < line.size(); it++) {
-         if (count > 0)
-            spdlog::debug("{}\t{}\t{}", line.size(), line.substr(last, it - last), it - last);
 
          switch (line[it]) {
          // Check if it is necessary to consider quataion
