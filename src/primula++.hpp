@@ -62,13 +62,6 @@ public:
    std::vector<std::vector<double>> z_;
    KiLib::Raster pr_failure_;
 
-   std::vector<double> Crl_Fs200_;
-   std::vector<double> Crl_Fs800_;
-   std::vector<double> Crl_Pa200_;
-   std::vector<double> Crl_Pa400_;
-   std::vector<double> Crl_Mf300_;
-   std::vector<double> Crl_Mf600_;
-   std::vector<double> Crl_Cs150_;
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
 
@@ -89,6 +82,9 @@ public:
    //==========================================================================
 
 private:
+
+   std::vector<size_t> iteration_index;
+
    std::vector<double> Pa400;
    std::vector<double> Pa200;
    std::vector<double> Fs800;
