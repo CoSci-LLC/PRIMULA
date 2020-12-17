@@ -15,10 +15,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
-#include <string>
-#include <unordered_map>
-
-std::mt19937_64 engine(69420); // Engine so our seed is consistent
 
 /**
  * @brief Returns the quantile of the given value in a triangular distribution
@@ -37,10 +33,6 @@ static double qtri(const double p, const double a, const double b, const double 
       return b - std::sqrt((b - a) * (b - c) * (1 - p));
 
    return c;
-}
-
-Primula::~Primula()
-{
 }
 
 KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
@@ -316,15 +308,15 @@ void Primula::GenerateSoilProperties()
 
       // generate random soil properties
 
-      this->phi1.push_back(stats::qunif(stats::runif(0, 1, engine), 30, 40));
-      this->phi2.push_back(stats::qunif(stats::runif(0, 1, engine), 35, 40));
-      this->gamma1.push_back(stats::qunif(stats::runif(0, 1, engine), 17, 19) * 1000);
-      this->ks1.push_back(stats::qunif(stats::runif(0, 1, engine), 0.5, 100));
-      this->ks2.push_back(stats::qunif(stats::runif(0, 1, engine), 0.5, 100));
+      this->phi1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 30, 40));
+      this->phi2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 35, 40));
+      this->gamma1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 17, 19) * 1000);
+      this->ks1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
+      this->ks2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
 
       // generate random landslide properties
-      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, engine), this->area_mu_, this->area_sigma_));
-      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, engine), this->l2w_mu_, this->l2w_sigma_));
+      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), this->area_mu_, this->area_sigma_));
+      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), this->l2w_mu_, this->l2w_sigma_));
       slide.width_  = sqrt((slide.area_ * 1.0) / (l2w * 1.0));
       slide.length_ = slide.width_ * l2w;
       this->landslide_.push_back(slide);
@@ -333,8 +325,8 @@ void Primula::GenerateSoilProperties()
       // TODO: Replace with vectorized discrete uniform operation
       this->iteration_index.emplace_back(rand() % this->Pa200.size());
 
-      this->Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, engine), 5, 7.5) * 1000);
-      this->Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, engine), 0, 15) * 1000);
+      this->Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 5, 7.5) * 1000);
+      this->Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0, 15) * 1000);
    }
 
    spdlog::info("Soil generation elapsed time: {}", sw);

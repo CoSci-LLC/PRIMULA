@@ -1,3 +1,4 @@
+#pragma once
 // ============================================================================
 // Copyright (C) SlideforMAP++. All rights reserved.
 //
@@ -6,9 +7,6 @@
 //
 // This file is part of SlideforMAP++
 // ============================================================================
-
-#ifndef LANDSLIDE_HPP
-#define LANDSLIDE_HPP
 
 class Landslide
 {
@@ -60,12 +58,4 @@ public:
    double root_basal_     = 0.0; // [Pa]                         Calculated
    double root_lateral_   = 0.0; // [Pa]                         User input
    double fos_            = 0.0; // Factor of Safety [-]           Calculated
-
-   //==========================================================================
-   // ... Private Member Data ...
-   //==========================================================================
-
-private:
 };
-
-#endif

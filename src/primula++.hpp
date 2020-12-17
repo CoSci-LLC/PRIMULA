@@ -1,3 +1,4 @@
+#pragma once
 // ============================================================================
 // Copyright (C) PRIMULA. All rights reserved.
 //
@@ -7,13 +8,11 @@
 // This file is part of PRIMULA
 // ============================================================================
 
-#ifndef PRIMULA_HPP
-#define PRIMULA_HPP
-
 #include <vector>
 
-#include "landslide.hpp"
+#include <landslide.hpp>
 #include <KiLib/KiLib.hpp>
+#include <random>
 
 class Primula
 {
@@ -21,11 +20,10 @@ public:
    //==========================================================================
    // ... Constructors, Destructors ...
    //==========================================================================
-   Primula(int n) : num_landslides(n)
+   Primula(int n, size_t seed) : num_landslides(n)
    {
+      this->engine = std::mt19937_64(seed); // this->Engine so our seed is consistent
    }
-
-   ~Primula();
 
    //==========================================================================
    // ... Public Accessor Functions ...
@@ -64,7 +62,7 @@ public:
 
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
-
+   
    double veg_weight_ = 70.0;  // [kg/m2]
    double rainfall_   = 0.100; // [m/day]
 
@@ -98,10 +96,10 @@ private:
    std::vector<double> ks1;
    std::vector<double> ks2;
 
+   std::mt19937_64 engine; // Engine so our can be consistent
+
    KiLib::Raster TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTab_v2(
       const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
       const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
 };
-
-#endif

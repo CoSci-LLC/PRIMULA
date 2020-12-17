@@ -1,5 +1,5 @@
 // ============================================================================
-// Copyright (C) PRIMULA++. All rights reserved.
+// Copyright (C) model++. All rights reserved.
 //
 // Authors: Denis Cohen-Corticchiato (DOHCC)
 // Email:   denis.cohen@gmail.com
@@ -7,43 +7,31 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
-#include "primula++.hpp"
+#include <Config.hpp>
+#include <filesystem>
 
-int main()
+namespace fs = std::filesystem;
+
+int main(int argc, char **argv)
 {
-   Primula primula(100);
+   Config config(argc, argv);
 
-   primula.slope_ = KiLib::Raster("../tests/malonno/slope_MALONNO.asc");
-   primula.slope_.writeToFile("slope.asc");
+   Primula model = config.configModel();
 
-   primula.twi_ = KiLib::Raster("../tests/malonno/twi_MALONNO.asc");
-   primula.twi_.writeToFile("twi.asc");
-
-   primula.soil_type_ = KiLib::Raster("../tests/malonno/soils_MALONNO_v2.asc");
-   primula.soil_type_.writeToFile("soils.asc");
-
-   primula.soil_depth_ = KiLib::Raster("../tests/malonno/soils_MALONNO.asc");
-   primula.soil_depth_.writeToFile("depth.asc");
-
-   primula.dusaf_ = KiLib::Raster("../tests/malonno/dusaf_MALONNO.asc");
-   primula.dusaf_.writeToFile("dusaf.asc");
-
-   primula.probslope_ = KiLib::Raster("../tests/malonno/PROBSLOPE_MALONNO.asc");
-   primula.probslope_.writeToFile("probslope.asc");
-
-   for (size_t r = 0; r < primula.probslope_.nRows; r++) {
-      for (size_t c = 0; c < primula.probslope_.nCols; c++) {
-         if (primula.slope_(r, c) == primula.slope_.nodata_value)
-            primula.probslope_(r, c) = primula.probslope_.nodata_value;
-         else if (primula.probslope_(r, c) < 0)
-            primula.probslope_(r, c) = 1.1028656e-06;
+   for (size_t r = 0; r < model.probslope_.nRows; r++) {
+      for (size_t c = 0; c < model.probslope_.nCols; c++) {
+         if (model.slope_(r, c) == model.slope_.nodata_value)
+            model.probslope_(r, c) = model.probslope_.nodata_value;
+         else if (model.probslope_(r, c) < 0)
+            model.probslope_(r, c) = 1.1028656e-06;
       }
    }
 
-   primula.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
-   primula.GenerateSoilProperties();
-   primula.CalculateSafetyFactor();
-   primula.pr_failure_.writeToFile("prob_failure.asc");
+   model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
+   model.GenerateSoilProperties();
+   model.CalculateSafetyFactor();
 
+   model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
+   
    return EXIT_SUCCESS;
 }

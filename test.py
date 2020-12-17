@@ -1,6 +1,6 @@
 import numpy as np
 
-p1 = "build/prob_failure.asc"
+p1 = "build/out_malonno/prob_failure.asc"
 p2 = "resources/prob_failure_ref.asc"
 
 a = np.loadtxt(p1, skiprows=6)
