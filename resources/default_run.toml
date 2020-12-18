@@ -21,5 +21,8 @@ probslopePath="../tests/malonno/PROBSLOPE_MALONNO.asc"
 # Seed for RNG
 seed=69420
 
+# The number of landslides to simulate
+numLandslides=100
+
 # Path to output directory
 outputPath="out_malonno"
