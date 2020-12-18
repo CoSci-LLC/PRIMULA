@@ -1,21 +1,21 @@
 # PRIMULA: Code that does stuff.
 
-# Path to slope data
+# Path to slope Raster
 slopePath="../tests/malonno/slope_MALONNO.asc"
 
-# Path to TWI data
+# Path to TWI Raster
 twiPath="../tests/malonno/twi_MALONNO.asc"
 
-# Path to soil type data
+# Path to soil type Raster
 soilTypePath="../tests/malonno/soils_MALONNO_v2.asc"
 
-# Path to soil depth data
+# Path to soil depth Raster
 soilDepthPath="../tests/malonno/soils_MALONNO.asc"
 
-# Path to dusaf data
+# Path to dusaf Raster
 dusafPath="../tests/malonno/dusaf_MALONNO.asc"
 
-# Path to probslope data
+# Path to probslope Raster
 probslopePath="../tests/malonno/PROBSLOPE_MALONNO.asc"
 
 # Seed for RNG
