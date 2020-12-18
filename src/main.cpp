@@ -32,6 +32,6 @@ int main(int argc, char **argv)
    model.CalculateSafetyFactor();
 
    model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
-   
+
    return EXIT_SUCCESS;
 }

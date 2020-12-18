@@ -22,7 +22,7 @@ private:
    std::string probslopePath;
 
    size_t num_landslides = 100;
-   size_t seed = 69420;
+   size_t seed           = 69420;
 
    void dumpConfigFile(std::string path);
 

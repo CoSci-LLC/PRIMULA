@@ -37,7 +37,7 @@ static double qtri(const double p, const double a, const double b, const double 
 
 KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   KiLib::Raster W(ks);
+   KiLib::Raster W = KiLib::Raster::zerosLike(ks);
 
    for (size_t i = 0; i < ks.data.size(); i++) {
       if (slope_.data.at(i) != slope_.nodata_value) {
@@ -56,8 +56,8 @@ KiLib::Raster Primula::MDSTab_v2(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
-   auto gamma_w = 9810; // unit weight of water [kN/m3]
-   KiLib::Raster FS(m);
+   auto gamma_w     = 9810; // unit weight of water [kN/m3]
+   KiLib::Raster FS = KiLib::Raster::zerosLike(m);
 
    // calculate factor of safety for each raster cell
    for (size_t i = 0; i < FS.data.size(); i++) {
@@ -356,8 +356,8 @@ void Primula::CalculateSafetyFactor()
          if (this->probslope_.data.at(j) != this->probslope_.nodata_value) {
             // if soil 1 or 2, translate info to rasters
             if (this->soil_type_.data.at(j)) {
-               auto& phiv = (int)this->soil_type_.data.at(j) == 1 ? this->phi1 : this->phi2;
-               auto& ksv  = (int)this->soil_type_.data.at(j) == 1 ? this->ks1  : this->ks2;
+               auto &phiv = (int)this->soil_type_.data.at(j) == 1 ? this->phi1 : this->phi2;
+               auto &ksv  = (int)this->soil_type_.data.at(j) == 1 ? this->ks1 : this->ks2;
                // use the number to determine which element of the vector to access
                friction_angle.data.at(j) = phiv.at(i) * M_PI / 180.0;
                permeability.data.at(j)   = ksv.at(i) * M_PI / 180.0;
@@ -431,7 +431,7 @@ void Primula::CalculateSafetyFactor()
    }
 
    // get average of sum of failure probabilities
-   for (auto& c : this->pr_failure_.data) {
+   for (auto &c : this->pr_failure_.data) {
       if (c != this->pr_failure_.nodata_value)
          c /= num_landslides;
       else

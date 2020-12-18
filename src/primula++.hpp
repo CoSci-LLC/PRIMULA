@@ -10,8 +10,8 @@
 
 #include <vector>
 
-#include <landslide.hpp>
 #include <KiLib/KiLib.hpp>
+#include <landslide.hpp>
 #include <random>
 
 class Primula
@@ -62,7 +62,7 @@ public:
 
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
-   
+
    double veg_weight_ = 70.0;  // [kg/m2]
    double rainfall_   = 0.100; // [m/day]
 
