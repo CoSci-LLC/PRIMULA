@@ -130,7 +130,7 @@ void Primula::ReadCSV(const std::string &file, const unsigned int &num_landslide
 
 KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   KiLib::Raster W(ks);
+   KiLib::Raster W = KiLib::Raster::zerosLike(ks);
 
    for (size_t i = 0; i < ks.data.size(); i++) {
       if (slope_.data.at(i) != slope_.nodata_value) {
@@ -149,8 +149,8 @@ KiLib::Raster Primula::MDSTab_v2(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
-   auto gamma_w = 9810; // unit weight of water [kN/m3]
-   KiLib::Raster FS(m);
+   auto gamma_w     = 9810; // unit weight of water [kN/m3]
+   KiLib::Raster FS = KiLib::Raster::zerosLike(m);
 
    // calculate factor of safety for each raster cell
    for (size_t i = 0; i < FS.data.size(); i++) {
@@ -339,15 +339,15 @@ void Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
    // ----------------------------------------------
    // ... Landslide generation ...
    // ----------------------------------------------
-   KiLib::Raster Pr_failure(probslope_);
-   Pr_failure.nodata_value = -9999;
+   KiLib::Raster Pr_failure = KiLib::Raster::zerosLike(probslope_);
+   Pr_failure.nodata_value  = -9999;
 
    for (unsigned int i = 0; i < num_landslides; i++) {
-      KiLib::Raster friction_angle(soil_type_);
-      KiLib::Raster permeability(soil_type_);
-      KiLib::Raster depth(soil_type_);
-      KiLib::Raster crl(soil_type_);
-      KiLib::Raster crb(soil_type_);
+      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(soil_type_);
+      KiLib::Raster permeability   = KiLib::Raster::zerosLike(soil_type_);
+      KiLib::Raster depth          = KiLib::Raster::zerosLike(soil_type_);
+      KiLib::Raster crl            = KiLib::Raster::zerosLike(soil_type_);
+      KiLib::Raster crb            = KiLib::Raster::zerosLike(soil_type_);
 
       // go through each raster cell
       for (size_t j = 0; j < soil_type_.data.size(); j++) {

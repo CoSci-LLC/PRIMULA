@@ -31,6 +31,6 @@ int main(int argc, char **argv)
    model.GenerateLandslides("../tests/malonno/RootReinforcement.csv", 100);
 
    model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
-   
+
    return EXIT_SUCCESS;
 }
