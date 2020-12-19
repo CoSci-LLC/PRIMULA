@@ -27,8 +27,9 @@ int main(int argc, char **argv)
       }
    }
 
-   model.ReadCSV("../tests/malonno/Pedologia_25k_MALONNO.csv", 100);
-   model.GenerateLandslides("../tests/malonno/RootReinforcement.csv", 100);
+   model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
+   model.GenerateSoilProperties();
+   model.CalculateSafetyFactor();
 
    model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
 

@@ -16,7 +16,6 @@
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
 
-
 /**
  * @brief Returns the quantile of the given value in a triangular distribution
  *
@@ -26,7 +25,7 @@
  * @param c The mode
  * @return double The quantile
  */
-static double qtri(const double &p, const double &a, const double &b, const double &c)
+static double qtri(const double p, const double a, const double b, const double c)
 {
    if (p < c)
       return a + std::sqrt((b - a) * (c - a) * p);
@@ -35,98 +34,6 @@ static double qtri(const double &p, const double &a, const double &b, const doub
 
    return c;
 }
-
-Primula::Primula(size_t seed)
-{
-   this->engine = std::mt19937_64(seed); // this->Engine so our seed is consistent
-}
-
-void Primula::ReadCSV(const std::string &file, const unsigned int &num_landslides)
-{
-   spdlog::info("Primula::ReadCSV '{}' Start", file);
-
-   // Open data file
-   std::ifstream fin;
-   fin.open(file);
-   if (!fin.is_open()) {
-      spdlog::error("File '{}' failed to open", file);
-      exit(EXIT_FAILURE);
-   }
-
-   std::string line;
-   std::string word;
-   int cod_pos, prof_pos, cod, prof;
-
-   // find columns with COD_UTS1 and PROF_UTILE
-   int count = 0;
-   getline(fin, line);
-   std::stringstream ss(line);
-   while (ss.good()) {
-      getline(ss, word, ',');
-      word.erase(
-         std::remove_if(word.begin(), word.end(), [](auto const &c) -> bool { return std::iscntrl(c); }), word.end());
-      if (word == "COD_UTS1")
-         cod_pos = count;
-      else if (word == "PROF_UTILE")
-         prof_pos = count;
-      count++;
-   }
-
-   // extract COD_UTS1 and PROF_UTILE info in each line
-   while (getline(fin, line)) {
-      count      = 0;
-      bool quote = false;
-      std::vector<char> cstr(line.c_str(), line.c_str() + line.size() + 1);
-      std::ostringstream out;
-      for (char c : cstr) {
-         if (c == '"') {
-            if (quote) {
-               std::string s(out.str());
-               if (s != "") {
-                  if (count == cod_pos)
-                     std::stringstream(s) >> cod;
-                  else if (count == prof_pos)
-                     std::stringstream(s) >> prof;
-                  count++;
-               }
-               quote = false;
-               out.str("");
-               out.clear();
-            } else
-               quote = true;
-         } else if ((c == ',' && !quote) || c == '\n') {
-            std::string s(out.str());
-            if (s != "") {
-               if (count == cod_pos)
-                  std::stringstream(s) >> cod;
-               else if (count == prof_pos)
-                  std::stringstream(s) >> prof;
-               count++;
-            }
-            out.str("");
-            out.clear();
-         } else
-            out << c;
-      }
-
-      // store if info not already found
-      if (std::find(soil_id_.begin(), soil_id_.end(), cod) == soil_id_.end()) {
-         soil_id_.push_back(cod);
-         auto max_z = prof / 100.0;
-
-         std::vector<double> rand;
-
-         for (unsigned int i = 0; i < num_landslides; i++) {
-            rand.push_back(qtri(stats::runif(0, 1, this->engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
-         }
-         z_.push_back(rand);
-      }
-   }
-
-   fin.close();
-   spdlog::info("Primula::ReadCSV '{}' End", file);
-}
-
 
 KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
@@ -159,11 +66,11 @@ KiLib::Raster Primula::MDSTab_v2(
       auto tmp_z   = z.data.at(i);
       auto tmp_Crl = Crl.data.at(i);
       auto tmp_Crb = Crb.data.at(i);
-      auto theta   = probslope_.data.at(i);
-      auto delta   = slope_.data.at(i);
+      auto theta   = this->probslope_.data.at(i);
+      auto delta   = this->slope_.data.at(i);
 
       // run calculation if probslope is non-empty
-      if (theta != probslope_.nodata_value) {
+      if (theta != this->probslope_.nodata_value) {
          auto Fdc = gamma_s * tmp_z * sin(theta) * cos(theta) * slide.width_ * slide.length_;
          if (Fdc) {
             auto K0 = 1.0 - sin(tmp_phi);
@@ -216,153 +123,250 @@ KiLib::Raster Primula::MDSTab_v2(
    return FS;
 }
 
-void Primula::GenerateLandslides(const std::string &file, const unsigned int &num_landslides)
+/**
+ * @brief Reads the data from the appropriate CSV files and populates hidden datastructures in the class
+ *
+ * @param soil_data The relative path to the soil data
+ * @param root_data The relative path to the root data
+ */
+void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &root_data)
 {
-   // ----------------------------------------------
-   // ... Generate soil properties ...
-   // ... Generate random data ...
-   // ----------------------------------------------
+
    spdlog::stopwatch sw;
 
-   // Open data file
+   size_t last  = 0;
+   size_t count = 0;
+   int cod      = -1;
+   int prof     = -1;
+   char state   = '\n';
+
+   std::unordered_map<std::string, size_t> col_pos;
+   std::stringstream ss;
+   std::string line;
+   std::string word;
+
    std::ifstream fin;
-   fin.open(file);
+
+   // TODO: Consider replacing this with a CSV parsing library
+
+   // ------------------------------
+   // Reading Soil Data
+   // ------------------------------
+   fin.open(soil_data, std::ios::in);
    if (!fin.is_open()) {
-      spdlog::error("File '{}' failed to open", file);
+      spdlog::error("File '{}' failed to open", soil_data);
       exit(EXIT_FAILURE);
    }
 
-   unsigned int count = 0;
-   unsigned int Fs200_pos, Fs800_pos, Pa200_pos, Pa400_pos, Mf300_pos, Mf600_pos, Cs150_pos;
-   std::vector<double> Fs200, Fs800, Pa200, Pa400, Mf600, Mf300, Cs150;
-   std::string line, word;
-
-   // get column numbers for each data set
+   count = 0;
    getline(fin, line);
-   std::stringstream ss(line);
-   while (ss.good()) {
-      getline(ss, word, ',');
-      word.erase(
-         std::remove_if(word.begin(), word.end(), [](auto const &c) -> bool { return std::iscntrl(c); }), word.end());
+   ss.str(line);
 
-      if (word == "Pa400")
-         Pa400_pos = count;
-      else if (word == "Pa200")
-         Pa200_pos = count;
-      else if (word == "Fs800")
-         Fs800_pos = count;
-      else if (word == "Fs200")
-         Fs200_pos = count;
-      else if (word == "Cs150")
-         Cs150_pos = count;
-      else if (word == "MF600")
-         Mf600_pos = count;
-      else if (word == "MF300")
-         Mf300_pos = count;
-      count++;
+   while (ss.good() && getline(ss, word, ',')) {
+      col_pos[word] = count++;
    }
 
-   // store data in each line
    while (getline(fin, line)) {
+      // getline strips the last '\n' which is necessary to check for data in the last column
+      line += '\n';
+      state = '\n';
+      last  = 0;
       count = 0;
-      std::stringstream ss(line);
-      while (ss.good()) {
-         getline(ss, word, ',');
-         if (count == Pa400_pos)
-            Pa400.push_back(std::stod(word) * 1000);
-         else if (count == Pa200_pos)
-            Pa200.push_back(std::stod(word) * 1000);
-         else if (count == Fs800_pos)
-            Fs800.push_back(std::stod(word) * 1000);
-         else if (count == Fs200_pos)
-            Fs200.push_back(std::stod(word) * 1000);
-         else if (count == Cs150_pos)
-            Cs150.push_back(std::stod(word) * 1000);
-         else if (count == Mf600_pos)
-            Mf600.push_back(std::stod(word) * 1000);
-         else if (count == Mf300_pos)
-            Mf300.push_back(std::stod(word) * 1000);
-         count++;
+      cod   = -1;
+      prof  = -1;
+
+      for (size_t it = 0; it < line.size(); it++) {
+
+         switch (line[it]) {
+         // Check if it is necessary to consider quataion
+         case '"':
+         case '\'':
+            if (state == line[it])
+               state = '\n';
+            else if (state == '\n')
+               state = line[it];
+            break;
+         case ',':
+            if (state != '\n')
+               break;
+         case '\n':
+            if (count == col_pos["COD_UTS1"])
+               cod = std::stoi(line.substr(last, it - last));
+            else if (count == col_pos["PROF_UTILE"])
+               prof = std::stoi(line.substr(last, it - last));
+
+            state = '\n';
+            last  = it + 1;
+            count++;
+            break;
+         }
+
+         if (count > std::max(col_pos["COD_UTS1"], col_pos["PROF_UTILE"]))
+            break;
+      }
+
+      if (std::find(this->soil_id_.begin(), this->soil_id_.end(), cod) == this->soil_id_.end()) {
+         this->soil_id_.push_back(cod);
+         auto max_z = prof / 100.0;
+
+         std::vector<double> rand;
+
+         for (unsigned int i = 0; i < this->num_landslides; i++) {
+            rand.push_back(qtri(stats::runif(0, 1, engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
+         }
+         this->z_.push_back(rand);
       }
    }
 
-   std::vector<std::vector<double>> phi;   // soil friction angle (rad)
-   std::vector<std::vector<double>> gamma; // specific weight falues [N/m^3]
-   std::vector<std::vector<double>> ks;    // soil permeability [m/day]
+   fin.close();
+   ss.clear();
+   col_pos.clear();
 
-   std::vector<double> phi1;   // phi values for soil 1
-   std::vector<double> phi2;   // phi values for soil 2
-   std::vector<double> gamma1; // gamma values (for soil 1?)
-   std::vector<double> ks1;    // ks values for soil 1
-   std::vector<double> ks2;    // ks values for soil 2
-   for (unsigned int i = 0; i < num_landslides; i++) {
+   // ------------------------------
+   // Reading Root Data
+   // ------------------------------
+   fin.open(root_data, std::ios::in);
+   if (!fin.is_open()) {
+      spdlog::error("File '{}' failed to open", root_data);
+      exit(EXIT_FAILURE);
+   }
+
+   count = 0;
+   getline(fin, line);
+   ss.str(line);
+
+   while (ss.good() && getline(ss, word, ',')) {
+      // TODO: Find a cleaner way of doing this
+      if (
+         word.find("Pa400") || word.find("Pa200") || word.find("Fs800") || word.find("Fs200") || word.find("Cs150") ||
+         word.find("MF600") || word.find("MF300"))
+         col_pos[word] = count;
+      count++;
+   }
+
+   while (getline(fin, line)) {
+      // getline strips the last '\n' which is necessary to check for data in the last column
+      line += '\n';
+      state = '\n';
+      last  = 0;
+      count = 0;
+
+      for (size_t it = 0; it < line.size(); it++) {
+         switch (line[it]) {
+         // Check if it is necessary to consider quataion
+         case '"':
+         case '\'':
+            if (state == line[it])
+               state = '\n';
+            else if (state == '\n')
+               state = line[it];
+            break;
+         case ',':
+            if (state != '\n')
+               break;
+         case '\n':
+            if (count == col_pos["Pa400"])
+               this->Pa400.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+            else if (count == col_pos["Pa200"])
+               this->Pa200.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+            else if (count == col_pos["Fs200"])
+               this->Fs200.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+            else if (count == col_pos["Fs800"])
+               this->Fs800.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+            else if (count == col_pos["MF300"])
+               this->Mf300.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+            else if (count == col_pos["MF600"])
+               this->Mf600.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+            else if (count == col_pos["Cs150"])
+               this->Cs150.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
+
+            last = it + 1;
+            count++;
+            break;
+         }
+
+         // TODO: Find a way of terminating the loop early in a neat manner.
+      }
+   }
+
+   fin.close();
+
+   spdlog::info("Reading Dataset elapsed time: {}", sw);
+}
+
+
+/**
+ * @brief Uses the data which has been read and generates soil properties based on that
+ *
+ */
+void Primula::GenerateSoilProperties()
+{
+   spdlog::stopwatch sw;
+
+   for (size_t i = 0; i < this->num_landslides; i++) {
       Landslide slide;
 
       // generate random soil properties
 
-      phi1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 30, 40));
-      phi2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 35, 40));
-      gamma1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 17, 19) * 1000);
-      ks1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
-      ks2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
+      this->phi1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 30, 40));
+      this->phi2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 35, 40));
+      this->gamma1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 17, 19) * 1000);
+      this->ks1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
+      this->ks2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
 
       // generate random landslide properties
-      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), area_mu_, area_sigma_));
-      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), l2w_mu_, l2w_sigma_));
+      slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), this->area_mu_, this->area_sigma_));
+      auto l2w      = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), this->l2w_mu_, this->l2w_sigma_));
       slide.width_  = sqrt((slide.area_ * 1.0) / (l2w * 1.0));
       slide.length_ = slide.width_ * l2w;
-      landslide_.push_back(slide);
+      this->landslide_.push_back(slide);
 
       // pick random forest density
-      auto n = rand() % Pa200.size();
-      Crl_Fs200_.push_back(Fs200.at(n));
-      Crl_Fs800_.push_back(Fs800.at(n));
-      Crl_Pa200_.push_back(Pa200.at(n));
-      Crl_Pa400_.push_back(Pa400.at(n));
-      Crl_Mf300_.push_back(Mf300.at(n));
-      Crl_Mf600_.push_back(Mf600.at(n));
-      Crl_Cs150_.push_back(Cs150.at(n));
+      // TODO: Replace with vectorized discrete uniform operation
+      this->iteration_index.emplace_back(rand() % this->Pa200.size());
 
-      Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 5, 7.5) * 1000);
-      Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0, 15) * 1000);
+      this->Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 5, 7.5) * 1000);
+      this->Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0, 15) * 1000);
    }
-   // add to vector for easier access
-   phi.push_back(phi1);
-   phi.push_back(phi2);
-   gamma.push_back(gamma1);
-   ks.push_back(ks1);
-   ks.push_back(ks2);
 
    spdlog::info("Soil generation elapsed time: {}", sw);
-   sw.reset();
+}
 
-   // ----------------------------------------------
-   // ... Landslide generation ...
-   // ----------------------------------------------
-   KiLib::Raster Pr_failure = KiLib::Raster::zerosLike(probslope_);
-   Pr_failure.nodata_value  = -9999;
+
+/**
+ * @brief Uses the generated soil properties to calculate a safety factor.
+ *
+ */
+void Primula::CalculateSafetyFactor()
+{
+   spdlog::stopwatch sw;
+
+   this->pr_failure_              = KiLib::Raster::zerosLike(this->probslope_);
+   this->pr_failure_.nodata_value = -9999;
 
    for (unsigned int i = 0; i < num_landslides; i++) {
-      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(soil_type_);
-      KiLib::Raster permeability   = KiLib::Raster::zerosLike(soil_type_);
-      KiLib::Raster depth          = KiLib::Raster::zerosLike(soil_type_);
-      KiLib::Raster crl            = KiLib::Raster::zerosLike(soil_type_);
-      KiLib::Raster crb            = KiLib::Raster::zerosLike(soil_type_);
+      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->soil_type_);
 
       // go through each raster cell
-      for (size_t j = 0; j < soil_type_.data.size(); j++) {
-         if (probslope_.data.at(j) != probslope_.nodata_value) {
+      for (size_t j = 0; j < this->soil_type_.data.size(); j++) {
+         if (this->probslope_.data.at(j) != this->probslope_.nodata_value) {
             // if soil 1 or 2, translate info to rasters
-            if (soil_type_.data.at(j)) {
+            if (this->soil_type_.data.at(j)) {
+               auto &phiv = (int)this->soil_type_.data.at(j) == 1 ? this->phi1 : this->phi2;
+               auto &ksv  = (int)this->soil_type_.data.at(j) == 1 ? this->ks1 : this->ks2;
                // use the number to determine which element of the vector to access
-               friction_angle.data.at(j) = phi.at((int)soil_type_.data.at(j) - 1).at(i) * M_PI / 180.0;
-               permeability.data.at(j)   = ks.at((int)soil_type_.data.at(j) - 1).at(i) * M_PI / 180.0;
+               friction_angle.data.at(j) = phiv.at(i) * M_PI / 180.0;
+               permeability.data.at(j)   = ksv.at(i) * M_PI / 180.0;
             }
 
-            if (soil_depth_.data.at(j)) {
+            if (this->soil_depth_.data.at(j)) {
                // add the depth of the soil id in the raster to another raster
-               for (size_t k = 0; k < soil_id_.size(); k++) {
-                  if (soil_depth_.data.at(j) == soil_id_.at(k)) {
+               for (size_t k = 0; k < this->soil_id_.size(); k++) {
+                  if (this->soil_depth_.data.at(j) == this->soil_id_.at(k)) {
                      depth.data.at(j) = z_.at(k).at(i);
                      break;
                   }
@@ -381,26 +385,26 @@ void Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
                crl.data.at(j) = Cr_shrubland_.at(i);
                break;
             case 3121:
-               crl.data.at(j) = Crl_Pa400_.at(i);
+               crl.data.at(j) = this->Pa400.at(this->iteration_index[i]);
                break;
             case 3122:
-               crl.data.at(j) = Crl_Pa200_.at(i);
+               crl.data.at(j) = this->Pa200.at(this->iteration_index[i]);
                break;
             case 31111:
-               crl.data.at(j) = Crl_Fs800_.at(i);
+               crl.data.at(j) = this->Fs800.at(this->iteration_index[i]);
                break;
             case 31121:
-               crl.data.at(j) = Crl_Fs200_.at(i);
+               crl.data.at(j) = this->Fs200.at(this->iteration_index[i]);
                break;
             case 3114:
             case 222:
-               crl.data.at(j) = Crl_Cs150_.at(i);
+               crl.data.at(j) = this->Cs150.at(this->iteration_index[i]);
                break;
             case 31311:
-               crl.data.at(j) = Crl_Mf600_.at(i);
+               crl.data.at(j) = this->Mf600.at(this->iteration_index[i]);
                break;
             case 31321:
-               crl.data.at(j) = Crl_Mf300_.at(i);
+               crl.data.at(j) = this->Mf300.at(this->iteration_index[i]);
                break;
             default:
                crl.data.at(j) = 0;
@@ -416,26 +420,23 @@ void Primula::GenerateLandslides(const std::string &file, const unsigned int &nu
 
       auto m = TopModel_v3(permeability, depth);
 
-      auto FS = MDSTab_v2(landslide_.at(i), friction_angle, m, gamma.at(0).at(i), depth, crl, crb);
-      for (size_t j = 0; j < Pr_failure.data.size(); j++) {
-         if (probslope_.data.at(j) == probslope_.nodata_value)
-            Pr_failure.data.at(j) = Pr_failure.nodata_value;
+      auto FS = MDSTab_v2(this->landslide_.at(i), friction_angle, m, this->gamma1.at(i), depth, crl, crb);
+      for (size_t j = 0; j < this->pr_failure_.data.size(); j++) {
+         if (this->probslope_.data.at(j) == this->probslope_.nodata_value)
+            this->pr_failure_.data.at(j) = this->pr_failure_.nodata_value;
          else if (FS.data.at(j) < 1 && FS.data.at(j) > 0) {
-            Pr_failure.data.at(j) += FS.data.at(j);
+            this->pr_failure_.data.at(j) += FS.data.at(j);
          }
       }
    }
 
    // get average of sum of failure probabilities
-   for (auto &c : Pr_failure.data) {
-      if (c != Pr_failure.nodata_value)
+   for (auto &c : this->pr_failure_.data) {
+      if (c != this->pr_failure_.nodata_value)
          c /= num_landslides;
       else
          c = -9999;
    }
-
-   pr_failure_              = Pr_failure;
-   pr_failure_.nodata_value = -9999;
 
    spdlog::info("Landslide generation elapsed time: {}", sw);
 }

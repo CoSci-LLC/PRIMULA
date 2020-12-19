@@ -20,15 +20,35 @@ public:
    //==========================================================================
    // ... Constructors, Destructors ...
    //==========================================================================
-   Primula(size_t seed);
+   Primula(int n, size_t seed) : num_landslides(n)
+   {
+      this->engine = std::mt19937_64(seed); // this->Engine so our seed is consistent
+   }
+
+   //==========================================================================
+   // ... Public Accessor Functions ...
+   //==========================================================================
+
 
    //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
-   void GenerateLandslides(const std::string &file, const unsigned int &num_landslides);
-   void ReadCSV(const std::string &file, const unsigned int &num_landslides);
+   void GenerateSoilProperties();
+   void CalculateSafetyFactor();
+   void ReadSoilDataset(const std::string &soil_data, const std::string &root_data);
+   // void FindFOS();
+
+   // ... Static Member Data ...
+   static constexpr double gravity_        = 9.81;         // [m/s^2]
+   static constexpr double soil_density_   = 1834.8624;    // [kg/m^3] Schwarz M. R Code
+   static constexpr double transmissivity_ = 0.0002644655; // [m/s] Fixed for the moment. From R code
+   static constexpr double rain_intensity_ =
+      0.001 * 70 / 3600; // [m/s] >> Eventually should live outside of primula class <<
+
 
    // ... Member Data ...
+   size_t num_landslides;
+
    KiLib::Raster slope_;
    KiLib::Raster probslope_;
    KiLib::Raster twi_;
@@ -40,13 +60,6 @@ public:
    std::vector<std::vector<double>> z_;
    KiLib::Raster pr_failure_;
 
-   std::vector<double> Crl_Fs200_;
-   std::vector<double> Crl_Fs800_;
-   std::vector<double> Crl_Pa200_;
-   std::vector<double> Crl_Pa400_;
-   std::vector<double> Crl_Mf300_;
-   std::vector<double> Crl_Mf600_;
-   std::vector<double> Crl_Cs150_;
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
 
@@ -67,6 +80,22 @@ public:
    //==========================================================================
 
 private:
+   std::vector<size_t> iteration_index;
+
+   std::vector<double> Pa400;
+   std::vector<double> Pa200;
+   std::vector<double> Fs800;
+   std::vector<double> Fs200;
+   std::vector<double> Cs150;
+   std::vector<double> Mf600;
+   std::vector<double> Mf300;
+
+   std::vector<double> phi1;
+   std::vector<double> phi2;
+   std::vector<double> gamma1;
+   std::vector<double> ks1;
+   std::vector<double> ks2;
+
    std::mt19937_64 engine; // Engine so our can be consistent
 
    KiLib::Raster TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z);
