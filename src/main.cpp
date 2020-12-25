@@ -10,6 +10,8 @@
 #include <Config.hpp>
 #include <filesystem>
 
+#include "tiff.hpp"
+
 namespace fs = std::filesystem;
 
 int main(int argc, char **argv)
@@ -27,11 +29,14 @@ int main(int argc, char **argv)
       }
    }
 
-   model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
-   model.GenerateSoilProperties();
-   model.CalculateSafetyFactor();
+   spdlog::info("is Geo-tiff: {}",isGEOTIFF("../utils/DEM.tif"));
+   fromTiff("../utils/DEM.tif");
 
-   model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
+   // model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
+   // model.GenerateSoilProperties();
+   // model.CalculateSafetyFactor();
+
+   // model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
 
    return EXIT_SUCCESS;
 }

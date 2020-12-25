@@ -17,6 +17,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # PRIMULA
 #==============================================================================
 include(CMake/KiLib.cmake.in)
+include(CMake/libtiff.cmake.in)
 include(CMake/CLI11.cmake.in)
 
 
@@ -26,6 +27,7 @@ add_executable(
     src/primula++.cpp
     src/landslide.cpp
     src/Config.cpp
+    src/tiff.cpp
 )
 
-target_link_libraries(PRIMULA OpenMP::OpenMP_CXX KiLib CLI11)
+target_link_libraries(PRIMULA OpenMP::OpenMP_CXX KiLib CLI11 tiff)
