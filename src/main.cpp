@@ -29,14 +29,11 @@ int main(int argc, char **argv)
       }
    }
 
-   spdlog::info("is Geo-tiff: {}",isGEOTIFF("../utils/DEM.tif"));
-   fromTiff("../utils/DEM.tif");
+   model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
+   model.GenerateSoilProperties();
+   model.CalculateSafetyFactor();
 
-   // model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
-   // model.GenerateSoilProperties();
-   // model.CalculateSafetyFactor();
-
-   // model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
+   model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
 
    return EXIT_SUCCESS;
 }
