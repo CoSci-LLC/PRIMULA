@@ -36,7 +36,6 @@ public:
    void GenerateSoilProperties();
    void CalculateSafetyFactor();
    void ReadSoilDataset(const std::string &soil_data, const std::string &root_data);
-   // void FindFOS();
 
    // ... Static Member Data ...
    static constexpr double gravity_        = 9.81;         // [m/s^2]
@@ -48,6 +47,8 @@ public:
 
    // ... Member Data ...
    size_t num_landslides;
+
+   KiLib::Stability::SafetyFactor::MDSTab SFCalculator;
 
    KiLib::Raster slope_;
    KiLib::Raster probslope_;

@@ -15,10 +15,6 @@ Landslide::Landslide()
 {
 }
 
-Landslide::~Landslide()
-{
-}
-
 double Landslide::GetSlopeDeg()
 {
    return slope_ * 180 / M_PI;
