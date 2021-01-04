@@ -17,15 +17,14 @@
 #include <stats.hpp>
 
 
-KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
+KiLib::Raster Primula::CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
    KiLib::Raster W = KiLib::Raster::zerosLike(ks);
 
    for (size_t i = 0; i < ks.data.size(); i++) {
       if (slope_.data[i] != slope_.nodata_value) {
-         W.data[i] = ((rainfall_ * 0.9) / (ks.data[i] * z.data[i] * cos(slope_.data[i]))) * twi_.data[i];
-         if (W.data[i] > 1)
-            W.data[i] = 1.0;
+         W.data[i] =
+            this->soilDepthCalc.ComputeDepth(rainfall_, ks.data[i], z.data[i], slope_.data[i], twi_.data[i]);
       } else {
          W.data[i] = W.nodata_value;
       }
@@ -354,7 +353,7 @@ void Primula::CalculateSafetyFactor()
          }
       }
 
-      auto m = TopModel_v3(permeability, depth);
+      auto m = CalcSoilDepth(permeability, depth);
 
       auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma1[i], depth, crl, crb);
       for (size_t j = 0; j < this->pr_failure_.data.size(); j++) {
