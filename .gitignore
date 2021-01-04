@@ -9,3 +9,4 @@ build/
 **/inv_gamma_dist.dat
 tests/*.asc
 .vscode/*
+.vs/*
