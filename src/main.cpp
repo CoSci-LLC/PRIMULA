@@ -10,8 +10,6 @@
 #include <Config.hpp>
 #include <filesystem>
 
-#include "tiff.hpp"
-
 namespace fs = std::filesystem;
 
 int main(int argc, char **argv)
@@ -33,7 +31,7 @@ int main(int argc, char **argv)
    model.GenerateSoilProperties();
    model.CalculateSafetyFactor();
 
-   model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
+   model.pr_failure_.writeToFile((fs::path(config.outputPath) / fs::path("prob_failure.asc")).string());
 
    return EXIT_SUCCESS;
 }
