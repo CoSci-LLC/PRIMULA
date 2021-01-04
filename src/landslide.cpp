@@ -7,6 +7,8 @@
 // This file is part of SlideforMAP++
 // ============================================================================
 
+#define _USE_MATH_DEFINES
+
 #include <cmath>
 
 #include "landslide.hpp"
