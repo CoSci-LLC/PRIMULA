@@ -7,8 +7,6 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
-#define STATS_USE_OPENMP
-
 #include "primula++.hpp"
 #include <chrono>
 #include <random>
