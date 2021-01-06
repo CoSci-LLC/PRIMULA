@@ -1,11 +1,6 @@
 cmake_minimum_required (VERSION 3.9)
 project (PRIMULA)
 
-#==============================================================================
-# Packages / Libraries
-#==============================================================================
-find_package(OpenMP)
-
 # Locate headers
 include_directories(src)
 
@@ -45,4 +40,4 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(PRIMULA PRIVATE  /std:c++latest /EHsc)
 endif()
 
-target_link_libraries(PRIMULA OpenMP::OpenMP_CXX KiLib CLI11 tiff)
+target_link_libraries(PRIMULA KiLib CLI11 tiff)
