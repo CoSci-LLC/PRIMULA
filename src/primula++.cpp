@@ -19,17 +19,13 @@
 
 KiLib::Raster Primula::CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   KiLib::Raster W = KiLib::Raster::zerosLike(ks);
+   KiLib::Raster W = KiLib::Raster::nodataLike(slope_);
 
-   for (size_t i = 0; i < ks.data.size(); i++)
+   for (size_t i = 0; i < ks.nData; i++)
    {
-      if (slope_.data[i] != slope_.nodata_value)
+      if (slope_(i) != slope_.nodata_value)
       {
-         W.data[i] = this->soilDepthCalc.ComputeDepth(rainfall_, ks.data[i], z.data[i], slope_.data[i], twi_.data[i]);
-      }
-      else
-      {
-         W.data[i] = W.nodata_value;
+         W(i) = this->soilDepthCalc.ComputeDepth(rainfall_, ks(i), z(i), slope_(i), twi_(i));
       }
    }
 
@@ -43,9 +39,9 @@ KiLib::Raster Primula::MDSTab_v2(
    KiLib::Raster FS = KiLib::Raster::zerosLike(m);
 
    // calculate factor of safety for each raster cell
-   for (size_t i = 0; i < FS.data.size(); i++)
+   for (size_t i = 0; i < FS.nData; i++)
    {
-      double theta = this->probslope_.data[i];
+      double theta = this->probslope_(i);
       // run calculation if probslope is non-empty
       if (theta == this->probslope_.nodata_value)
       {
@@ -53,10 +49,9 @@ KiLib::Raster Primula::MDSTab_v2(
       }
 
       double SF = this->SFCalculator.ComputeSF(
-         phi.data[i], m.data[i], z.data[i], Crl.data[i], Crb.data[i], theta, this->slope_.data[i], gamma_s,
-         slide.width_, slide.length_);
+         phi(i), m(i), z(i), Crl(i), Crb(i), theta, this->slope_(i), gamma_s, slide.width_, slide.length_);
 
-      FS.data[i] = SF;
+      FS(i) = SF;
    }
 
    return FS;
@@ -306,89 +301,91 @@ void Primula::CalculateSafetyFactor()
       KiLib::Raster crb            = KiLib::Raster::zerosLike(this->soil_type_);
 
       // go through each raster cell
-      for (size_t j = 0; j < this->soil_type_.data.size(); j++)
+      for (size_t j = 0; j < this->soil_type_.nData; j++)
       {
-         if (this->probslope_.data[j] != this->probslope_.nodata_value)
-         {
-            // if soil 1 or 2, translate info to rasters
-            if (this->soil_type_.data[j])
-            {
-               auto &phiv = (int)this->soil_type_.data[j] == 1 ? this->phi1 : this->phi2;
-               auto &ksv  = (int)this->soil_type_.data[j] == 1 ? this->ks1 : this->ks2;
-               // use the number to determine which element of the vector to access
-               friction_angle.data[j] = phiv[i] * M_PI / 180.0;
-               permeability.data[j]   = ksv[i] * M_PI / 180.0;
-            }
+         if (this->probslope_(j) == this->probslope_.nodata_value)
+            continue;
 
-            if (this->soil_depth_.data[j])
+         // if soil 1 or 2, translate info to rasters
+         if (this->soil_type_(j))
+         {
+            auto &phiv = (int)this->soil_type_(j) == 1 ? this->phi1 : this->phi2;
+            auto &ksv  = (int)this->soil_type_(j) == 1 ? this->ks1 : this->ks2;
+            // use the number to determine which element of the vector to access
+            friction_angle(j) = phiv[i] * M_PI / 180.0;
+            permeability(j)   = ksv[i] * M_PI / 180.0;
+         }
+
+         if (this->soil_depth_(j))
+         {
+            // add the depth of the soil id in the raster to another raster
+            for (size_t k = 0; k < this->soil_id_.size(); k++)
             {
-               // add the depth of the soil id in the raster to another raster
-               for (size_t k = 0; k < this->soil_id_.size(); k++)
+               if (this->soil_depth_(j) == this->soil_id_[k])
                {
-                  if (this->soil_depth_.data[j] == this->soil_id_[k])
-                  {
-                     depth.data[j] = z_[k][i];
-                     break;
-                  }
+                  depth(j) = z_[k][i];
+                  break;
                }
             }
-
-            // copy dusaf raster, replacing codes with appropriate forest density
-            switch ((int)dusaf_.data[j])
-            {
-            case 3211:
-            case 3212:
-            case 3221:
-               crl.data[j] = Cr_grassland_[i];
-               break;
-            case 332:
-            case 333:
-               crl.data[j] = Cr_shrubland_[i];
-               break;
-            case 3121:
-               crl.data[j] = this->Pa400[this->iteration_index[i]];
-               break;
-            case 3122:
-               crl.data[j] = this->Pa200[this->iteration_index[i]];
-               break;
-            case 31111:
-               crl.data[j] = this->Fs800[this->iteration_index[i]];
-               break;
-            case 31121:
-               crl.data[j] = this->Fs200[this->iteration_index[i]];
-               break;
-            case 3114:
-            case 222:
-               crl.data[j] = this->Cs150[this->iteration_index[i]];
-               break;
-            case 31311:
-               crl.data[j] = this->Mf600[this->iteration_index[i]];
-               break;
-            case 31321:
-               crl.data[j] = this->Mf300[this->iteration_index[i]];
-               break;
-            default:
-               crl.data[j] = 0;
-               break;
-            }
-
-            if (depth.data[j] >= 0.5)
-               crb.data[j] = 0;
-            else
-               crb.data[j] = crl.data[j];
          }
+
+         // copy dusaf raster, replacing codes with appropriate forest density
+         switch ((int)dusaf_(j))
+         {
+         case 3211:
+         case 3212:
+         case 3221:
+            crl(j) = Cr_grassland_[i];
+            break;
+         case 332:
+         case 333:
+            crl(j) = Cr_shrubland_[i];
+            break;
+         case 3121:
+            crl(j) = this->Pa400[this->iteration_index[i]];
+            break;
+         case 3122:
+            crl(j) = this->Pa200[this->iteration_index[i]];
+            break;
+         case 31111:
+            crl(j) = this->Fs800[this->iteration_index[i]];
+            break;
+         case 31121:
+            crl(j) = this->Fs200[this->iteration_index[i]];
+            break;
+         case 3114:
+         case 222:
+            crl(j) = this->Cs150[this->iteration_index[i]];
+            break;
+         case 31311:
+            crl(j) = this->Mf600[this->iteration_index[i]];
+            break;
+         case 31321:
+            crl(j) = this->Mf300[this->iteration_index[i]];
+            break;
+         default:
+            crl(j) = 0;
+            break;
+         }
+
+         if (depth(j) >= 0.5)
+            crb(j) = 0;
+         else
+            crb(j) = crl(j);
       }
 
       auto m = CalcSoilDepth(permeability, depth);
 
       auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma1[i], depth, crl, crb);
-      for (size_t j = 0; j < this->pr_failure_.data.size(); j++)
+      for (size_t j = 0; j < this->pr_failure_.nData; j++)
       {
-         if (this->probslope_.data[j] == this->probslope_.nodata_value)
-            this->pr_failure_.data[j] = this->pr_failure_.nodata_value;
-         else if (FS.data[j] < 1 && FS.data[j] > 0)
+         if (this->probslope_(j) == this->probslope_.nodata_value)
          {
-            this->pr_failure_.data[j] += FS.data[j];
+            this->pr_failure_(j) = this->pr_failure_.nodata_value;
+         }
+         else if (FS(j) < 1 && FS(j) > 0)
+         {
+            this->pr_failure_(j) += FS(j);
          }
       }
    }
