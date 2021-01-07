@@ -22,9 +22,12 @@ Config::Config(int argc, char **argv)
    parser.add_option("--outputPath",    this->outputPath,     "Path to output directory")->required();
    // clang-format on
 
-   try {
+   try
+   {
       parser.parse(argc, argv);
-   } catch (const CLI::ParseError &e) {
+   }
+   catch (const CLI::ParseError &e)
+   {
       parser.exit(e);
       std::cout << "\nWriting out a config file, called 'default_config.toml', for you to fill in." << std::endl;
       this->dumpConfigFile("default_config.toml");
@@ -56,9 +59,11 @@ Primula Config::configModel()
 void Config::dumpConfigFile(std::string path)
 {
    std::ofstream outFile = std::ofstream(path);
-   for (auto opt : this->parser.get_options()) {
+   for (auto opt : this->parser.get_options())
+   {
       // Dont print help or config
-      if (opt->get_lnames()[0] == "help" || opt->get_lnames()[0] == "config") {
+      if (opt->get_lnames()[0] == "help" || opt->get_lnames()[0] == "config")
+      {
          continue;
       }
 

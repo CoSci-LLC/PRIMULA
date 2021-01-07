@@ -14,7 +14,7 @@ public:
    Landslide(){};
 
    // Geometry
-   double area_           = 0.0; // [m2]    Random, inverse gamma
-   double length_         = 0.0; // [m]     Calculated
-   double width_          = 0.0; // [m]     Calculated
+   double area_   = 0.0; // [m2]    Random, inverse gamma
+   double length_ = 0.0; // [m]     Calculated
+   double width_  = 0.0; // [m]     Calculated
 };

@@ -49,18 +49,18 @@ public:
    size_t num_landslides;
 
    KiLib::Stability::SafetyFactor::MDSTab SFCalculator;
-   KiLib::SoilDepth::TopModel soilDepthCalc;
+   KiLib::SoilDepth::TopModel             soilDepthCalc;
 
-   KiLib::Raster slope_;
-   KiLib::Raster probslope_;
-   KiLib::Raster twi_;
-   KiLib::Raster soil_type_;
-   KiLib::Raster soil_depth_;
-   KiLib::Raster dusaf_;
-   std::vector<Landslide> landslide_;
-   std::vector<int> soil_id_;
+   KiLib::Raster                    slope_;
+   KiLib::Raster                    probslope_;
+   KiLib::Raster                    twi_;
+   KiLib::Raster                    soil_type_;
+   KiLib::Raster                    soil_depth_;
+   KiLib::Raster                    dusaf_;
+   std::vector<Landslide>           landslide_;
+   std::vector<int>                 soil_id_;
    std::vector<std::vector<double>> z_;
-   KiLib::Raster pr_failure_;
+   KiLib::Raster                    pr_failure_;
 
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;

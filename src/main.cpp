@@ -18,8 +18,10 @@ int main(int argc, char **argv)
 
    Primula model = config.configModel();
 
-   for (size_t r = 0; r < model.probslope_.nRows; r++) {
-      for (size_t c = 0; c < model.probslope_.nCols; c++) {
+   for (size_t r = 0; r < model.probslope_.nRows; r++)
+   {
+      for (size_t c = 0; c < model.probslope_.nCols; c++)
+      {
          if (model.slope_(r, c) == model.slope_.nodata_value)
             model.probslope_(r, c) = model.probslope_.nodata_value;
          else if (model.probslope_(r, c) < 0)
