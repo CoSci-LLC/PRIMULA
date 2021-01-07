@@ -27,6 +27,11 @@ int main(int argc, char **argv)
       }
    }
 
+   auto dem = KiLib::Raster("../utils/DEM.tif");
+   dem.writeToFile("dem.tif");
+
+   exit(EXIT_SUCCESS);
+
    model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
    model.GenerateSoilProperties();
    model.CalculateSafetyFactor();
