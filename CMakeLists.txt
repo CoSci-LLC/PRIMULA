@@ -24,7 +24,6 @@ add_executable(
     PRIMULA 
     src/main.cpp 
     src/primula++.cpp
-    src/landslide.cpp
     src/Config.cpp
 )
 
