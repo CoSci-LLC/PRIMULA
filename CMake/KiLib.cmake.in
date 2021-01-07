@@ -5,7 +5,7 @@ FetchContent_Populate(
 	kilib_proj
 	QUIET
 	GIT_REPOSITORY git@github.com:CoSci-LLC/KiLib-OSS.git
-    GIT_TAG issue17
+    GIT_TAG v2.4.0
 	SOURCE_DIR     kilib_proj              # (Relative) path within in the build directory.
 )
 
@@ -13,5 +13,3 @@ FetchContent_Populate(
 # And now you can already add and use it, like it's a part/target of your own project!
 
 add_subdirectory(${kilib_proj_SOURCE_DIR} kilib_proj/build)
-include_directories(${kilib_proj_SOURCE_DIR} ${CMAKE_INSTALL_PREFIX}/include)
-include_directories(${stats_proj_SOURCE_DIR}/include)
