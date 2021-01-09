@@ -7,43 +7,25 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
-#include "primula++.hpp"
+#include <KiLib/Utils/Random.hpp>
 #include <chrono>
+#include <cmath>
+#include <primula++.hpp>
 #include <random>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
 
-/**
- * @brief Returns the quantile of the given value in a triangular distribution
- *
- * @param p The probability
- * @param a The lower bound
- * @param b The upper bound
- * @param c The mode
- * @return double The quantile
- */
-static double qtri(const double p, const double a, const double b, const double c)
+
+KiLib::Raster Primula::CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   if (p < c)
-      return a + std::sqrt((b - a) * (c - a) * p);
-   else if (p > c)
-      return b - std::sqrt((b - a) * (b - c) * (1 - p));
+   KiLib::Raster W = KiLib::Raster::nodataLike(slope_);
 
-   return c;
-}
-
-KiLib::Raster Primula::TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z)
-{
-   KiLib::Raster W = KiLib::Raster::zerosLike(ks);
-
-   for (size_t i = 0; i < ks.data.size(); i++) {
-      if (slope_.data.at(i) != slope_.nodata_value) {
-         W.data.at(i) = ((rainfall_ * 0.9) / (ks.data.at(i) * z.data.at(i) * cos(slope_.data.at(i)))) * twi_.data.at(i);
-         if (W.data.at(i) > 1)
-            W.data.at(i) = 1.0;
-      } else {
-         W.data.at(i) = W.nodata_value;
+   for (size_t i = 0; i < ks.nData; i++)
+   {
+      if (slope_(i) != slope_.nodata_value)
+      {
+         W(i) = this->soilDepthCalc.ComputeDepth(rainfall_, ks(i), z(i), slope_(i), twi_(i));
       }
    }
 
@@ -54,68 +36,22 @@ KiLib::Raster Primula::MDSTab_v2(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
-   auto gamma_w     = 9810; // unit weight of water [kN/m3]
    KiLib::Raster FS = KiLib::Raster::zerosLike(m);
 
    // calculate factor of safety for each raster cell
-   for (size_t i = 0; i < FS.data.size(); i++) {
-      auto tmp_phi = phi.data.at(i);
-      auto tmp_m   = m.data.at(i);
-      auto tmp_z   = z.data.at(i);
-      auto tmp_Crl = Crl.data.at(i);
-      auto tmp_Crb = Crb.data.at(i);
-      auto theta   = this->probslope_.data.at(i);
-      auto delta   = this->slope_.data.at(i);
-
+   for (size_t i = 0; i < FS.nData; i++)
+   {
+      double theta = this->probslope_(i);
       // run calculation if probslope is non-empty
-      if (theta != this->probslope_.nodata_value) {
-         auto Fdc = gamma_s * tmp_z * sin(theta) * cos(theta) * slide.width_ * slide.length_;
-         if (Fdc) {
-            auto K0 = 1.0 - sin(tmp_phi);
-            // long equation derived from MDSTAB_v2.m
-            auto Frl = 0.5 * K0 * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.length_ * pow(tmp_z, 2) * cos(theta) *
-                          tan(tmp_phi) +
-                       tmp_Crl * slide.length_ * tmp_z * cos(theta);
-
-            // Rankine solution for cohesive soils
-            // Used in MDSTAB_V2.m
-            auto K = 4.0 * pow(cos(theta), 2) * (pow(cos(theta), 2) - pow(cos(tmp_phi), 2)) +
-                     (4 * pow(tmp_Crl / (gamma_s * tmp_z), 2) * pow(cos(tmp_phi), 2)) +
-                     (8 * (tmp_Crl / (gamma_s * tmp_z)) * pow(cos(theta), 2) * sin(tmp_phi) * cos(tmp_phi));
-            if (K < 0)
-               K = 0;
-
-            auto Kp =
-               (1 / pow(cos(tmp_phi), 2)) *
-                  (2 * pow(cos(theta), 2) + 2 * (tmp_Crl / (gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) + sqrt(K)) -
-               1;
-            auto Ka =
-               (1 / pow(cos(tmp_phi), 2)) *
-                  (2 * pow(cos(theta), 2) + 2 * (tmp_Crl / (gamma_s * tmp_z)) * cos(tmp_phi) * sin(tmp_phi) - sqrt(K)) -
-               1;
-
-            // net driving force of the upslope margin
-            auto Fdu =
-               0.5 * Ka * pow(tmp_z, 2) * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.width_ * cos(delta - theta);
-            auto Fnu =
-               0.5 * Ka * pow(tmp_z, 2) * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.width_ * sin(delta - theta);
-
-            // Passive force on the downslope margin
-            auto Frd =
-               0.5 * Kp * pow(tmp_z, 2) * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.width_ * cos(delta - theta);
-            // Negligible, so clearly we set it to 0 immediately after calculating it ¯\_(ツ)_/¯
-            Frd = 0;
-            auto Fnd =
-               0.5 * Kp * pow(tmp_z, 2) * (gamma_s - gamma_w * pow(tmp_m, 2)) * slide.width_ * sin(delta - theta);
-
-            // Basal resistance force
-            auto Fnc = (gamma_s - gamma_w * tmp_m) * tmp_z * pow(cos(theta), 2) * slide.width_ * slide.length_;
-            auto Fnt = Fnc + Fnu - Fnd;
-            auto Frb = tmp_Crb * slide.width_ * slide.length_ + Fnt * tan(tmp_phi);
-
-            FS.data.at(i) = (Frb + 2 * Frl + Frd - Fdu) / Fdc;
-         }
+      if (theta == this->probslope_.nodata_value)
+      {
+         continue;
       }
+
+      double SF = this->SFCalculator.ComputeSF(
+         phi(i), m(i), z(i), Crl(i), Crb(i), theta, this->slope_(i), gamma_s, slide.width_, slide.length_);
+
+      FS(i) = SF;
    }
 
    return FS;
@@ -134,14 +70,14 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
 
    size_t last  = 0;
    size_t count = 0;
-   int cod      = -1;
-   int prof     = -1;
-   char state   = '\n';
+   int    cod   = -1;
+   int    prof  = -1;
+   char   state = '\n';
 
    std::unordered_map<std::string, size_t> col_pos;
-   std::stringstream ss;
-   std::string line;
-   std::string word;
+   std::stringstream                       ss;
+   std::string                             line;
+   std::string                             word;
 
    std::ifstream fin;
 
@@ -151,7 +87,8 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
    // Reading Soil Data
    // ------------------------------
    fin.open(soil_data, std::ios::in);
-   if (!fin.is_open()) {
+   if (!fin.is_open())
+   {
       spdlog::error("File '{}' failed to open", soil_data);
       exit(EXIT_FAILURE);
    }
@@ -160,11 +97,13 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
    getline(fin, line);
    ss.str(line);
 
-   while (ss.good() && getline(ss, word, ',')) {
+   while (ss.good() && getline(ss, word, ','))
+   {
       col_pos[word] = count++;
    }
 
-   while (getline(fin, line)) {
+   while (getline(fin, line))
+   {
       // getline strips the last '\n' which is necessary to check for data in the last column
       line += '\n';
       state = '\n';
@@ -173,9 +112,11 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
       cod   = -1;
       prof  = -1;
 
-      for (size_t it = 0; it < line.size(); it++) {
+      for (size_t it = 0; it < line.size(); it++)
+      {
 
-         switch (line[it]) {
+         switch (line[it])
+         {
          // Check if it is necessary to consider quataion
          case '"':
          case '\'':
@@ -203,14 +144,17 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
             break;
       }
 
-      if (std::find(this->soil_id_.begin(), this->soil_id_.end(), cod) == this->soil_id_.end()) {
+      if (std::find(this->soil_id_.begin(), this->soil_id_.end(), cod) == this->soil_id_.end())
+      {
          this->soil_id_.push_back(cod);
          auto max_z = prof / 100.0;
 
          std::vector<double> rand;
 
-         for (unsigned int i = 0; i < this->num_landslides; i++) {
-            rand.push_back(qtri(stats::runif(0, 1, engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
+         for (unsigned int i = 0; i < this->num_landslides; i++)
+         {
+            rand.push_back(
+               KiLib::Random::qtri(stats::runif(0, 1, engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
          }
          this->z_.push_back(rand);
       }
@@ -224,7 +168,8 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
    // Reading Root Data
    // ------------------------------
    fin.open(root_data, std::ios::in);
-   if (!fin.is_open()) {
+   if (!fin.is_open())
+   {
       spdlog::error("File '{}' failed to open", root_data);
       exit(EXIT_FAILURE);
    }
@@ -233,7 +178,8 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
    getline(fin, line);
    ss.str(line);
 
-   while (ss.good() && getline(ss, word, ',')) {
+   while (ss.good() && getline(ss, word, ','))
+   {
       // TODO: Find a cleaner way of doing this
       if (
          word.find("Pa400") || word.find("Pa200") || word.find("Fs800") || word.find("Fs200") || word.find("Cs150") ||
@@ -242,15 +188,18 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
       count++;
    }
 
-   while (getline(fin, line)) {
+   while (getline(fin, line))
+   {
       // getline strips the last '\n' which is necessary to check for data in the last column
       line += '\n';
       state = '\n';
       last  = 0;
       count = 0;
 
-      for (size_t it = 0; it < line.size(); it++) {
-         switch (line[it]) {
+      for (size_t it = 0; it < line.size(); it++)
+      {
+         switch (line[it])
+         {
          // Check if it is necessary to consider quataion
          case '"':
          case '\'':
@@ -301,7 +250,8 @@ void Primula::GenerateSoilProperties()
 {
    spdlog::stopwatch sw;
 
-   for (size_t i = 0; i < this->num_landslides; i++) {
+   for (size_t i = 0; i < this->num_landslides; i++)
+   {
       Landslide slide;
 
       // generate random soil properties
@@ -342,7 +292,8 @@ void Primula::CalculateSafetyFactor()
    this->pr_failure_              = KiLib::Raster::zerosLike(this->probslope_);
    this->pr_failure_.nodata_value = -9999;
 
-   for (unsigned int i = 0; i < num_landslides; i++) {
+   for (unsigned int i = 0; i < num_landslides; i++)
+   {
       KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->soil_type_);
       KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->soil_type_);
       KiLib::Raster depth          = KiLib::Raster::zerosLike(this->soil_type_);
@@ -350,86 +301,98 @@ void Primula::CalculateSafetyFactor()
       KiLib::Raster crb            = KiLib::Raster::zerosLike(this->soil_type_);
 
       // go through each raster cell
-      for (size_t j = 0; j < this->soil_type_.data.size(); j++) {
-         if (this->probslope_.data.at(j) != this->probslope_.nodata_value) {
-            // if soil 1 or 2, translate info to rasters
-            if (this->soil_type_.data.at(j)) {
-               auto &phiv = (int)this->soil_type_.data.at(j) == 1 ? this->phi1 : this->phi2;
-               auto &ksv  = (int)this->soil_type_.data.at(j) == 1 ? this->ks1 : this->ks2;
-               // use the number to determine which element of the vector to access
-               friction_angle.data.at(j) = phiv.at(i) * M_PI / 180.0;
-               permeability.data.at(j)   = ksv.at(i) * M_PI / 180.0;
-            }
+      for (size_t j = 0; j < this->soil_type_.nData; j++)
+      {
+         if (this->probslope_(j) == this->probslope_.nodata_value)
+            continue;
 
-            if (this->soil_depth_.data.at(j)) {
-               // add the depth of the soil id in the raster to another raster
-               for (size_t k = 0; k < this->soil_id_.size(); k++) {
-                  if (this->soil_depth_.data.at(j) == this->soil_id_.at(k)) {
-                     depth.data.at(j) = z_.at(k).at(i);
-                     break;
-                  }
+         // if soil 1 or 2, translate info to rasters
+         if (this->soil_type_(j))
+         {
+            auto &phiv = (int)this->soil_type_(j) == 1 ? this->phi1 : this->phi2;
+            auto &ksv  = (int)this->soil_type_(j) == 1 ? this->ks1 : this->ks2;
+            // use the number to determine which element of the vector to access
+            friction_angle(j) = phiv[i] * M_PI / 180.0;
+            permeability(j)   = ksv[i] * M_PI / 180.0;
+         }
+
+         if (this->soil_depth_(j))
+         {
+            // add the depth of the soil id in the raster to another raster
+            for (size_t k = 0; k < this->soil_id_.size(); k++)
+            {
+               if (this->soil_depth_(j) == this->soil_id_[k])
+               {
+                  depth(j) = z_[k][i];
+                  break;
                }
             }
-
-            // copy dusaf raster, replacing codes with appropriate forest density
-            switch ((int)dusaf_.data.at(j)) {
-            case 3211:
-            case 3212:
-            case 3221:
-               crl.data.at(j) = Cr_grassland_.at(i);
-               break;
-            case 332:
-            case 333:
-               crl.data.at(j) = Cr_shrubland_.at(i);
-               break;
-            case 3121:
-               crl.data.at(j) = this->Pa400.at(this->iteration_index[i]);
-               break;
-            case 3122:
-               crl.data.at(j) = this->Pa200.at(this->iteration_index[i]);
-               break;
-            case 31111:
-               crl.data.at(j) = this->Fs800.at(this->iteration_index[i]);
-               break;
-            case 31121:
-               crl.data.at(j) = this->Fs200.at(this->iteration_index[i]);
-               break;
-            case 3114:
-            case 222:
-               crl.data.at(j) = this->Cs150.at(this->iteration_index[i]);
-               break;
-            case 31311:
-               crl.data.at(j) = this->Mf600.at(this->iteration_index[i]);
-               break;
-            case 31321:
-               crl.data.at(j) = this->Mf300.at(this->iteration_index[i]);
-               break;
-            default:
-               crl.data.at(j) = 0;
-               break;
-            }
-
-            if (depth.data.at(j) >= 0.5)
-               crb.data.at(j) = 0;
-            else
-               crb.data.at(j) = crl.data.at(j);
          }
+
+         // copy dusaf raster, replacing codes with appropriate forest density
+         switch ((int)dusaf_(j))
+         {
+         case 3211:
+         case 3212:
+         case 3221:
+            crl(j) = Cr_grassland_[i];
+            break;
+         case 332:
+         case 333:
+            crl(j) = Cr_shrubland_[i];
+            break;
+         case 3121:
+            crl(j) = this->Pa400[this->iteration_index[i]];
+            break;
+         case 3122:
+            crl(j) = this->Pa200[this->iteration_index[i]];
+            break;
+         case 31111:
+            crl(j) = this->Fs800[this->iteration_index[i]];
+            break;
+         case 31121:
+            crl(j) = this->Fs200[this->iteration_index[i]];
+            break;
+         case 3114:
+         case 222:
+            crl(j) = this->Cs150[this->iteration_index[i]];
+            break;
+         case 31311:
+            crl(j) = this->Mf600[this->iteration_index[i]];
+            break;
+         case 31321:
+            crl(j) = this->Mf300[this->iteration_index[i]];
+            break;
+         default:
+            crl(j) = 0;
+            break;
+         }
+
+         if (depth(j) >= 0.5)
+            crb(j) = 0;
+         else
+            crb(j) = crl(j);
       }
 
-      auto m = TopModel_v3(permeability, depth);
+      auto m = CalcSoilDepth(permeability, depth);
 
-      auto FS = MDSTab_v2(this->landslide_.at(i), friction_angle, m, this->gamma1.at(i), depth, crl, crb);
-      for (size_t j = 0; j < this->pr_failure_.data.size(); j++) {
-         if (this->probslope_.data.at(j) == this->probslope_.nodata_value)
-            this->pr_failure_.data.at(j) = this->pr_failure_.nodata_value;
-         else if (FS.data.at(j) < 1 && FS.data.at(j) > 0) {
-            this->pr_failure_.data.at(j) += FS.data.at(j);
+      auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma1[i], depth, crl, crb);
+      for (size_t j = 0; j < this->pr_failure_.nData; j++)
+      {
+         if (this->probslope_(j) == this->probslope_.nodata_value)
+         {
+            this->pr_failure_(j) = this->pr_failure_.nodata_value;
+         }
+         else if (FS(j) < 1 && FS(j) > 0)
+         {
+            this->pr_failure_(j) += FS(j);
          }
       }
    }
 
    // get average of sum of failure probabilities
-   for (auto &c : this->pr_failure_.data) {
+   for (auto &c : this->pr_failure_.data)
+   {
       if (c != this->pr_failure_.nodata_value)
          c /= num_landslides;
       else

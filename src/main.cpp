@@ -18,19 +18,13 @@ int main(int argc, char **argv)
 
    Primula model = config.configModel();
 
-   for (size_t r = 0; r < model.probslope_.nRows; r++) {
-      for (size_t c = 0; c < model.probslope_.nCols; c++) {
-         if (model.slope_(r, c) == model.slope_.nodata_value)
-            model.probslope_(r, c) = model.probslope_.nodata_value;
-         else if (model.probslope_(r, c) < 0)
-            model.probslope_(r, c) = 1.1028656e-06;
-      }
+   for (size_t i = 0; i < model.probslope_.nData; i++)
+   {
+      if (model.slope_(i) == model.slope_.nodata_value)
+         model.probslope_(i) = model.probslope_.nodata_value;
+      else if (model.probslope_(i) < 0)
+         model.probslope_(i) = 1.1028656e-06;
    }
-
-   auto dem = KiLib::Raster("../utils/DEM.tif");
-   dem.writeToFile("dem.tif");
-
-   exit(EXIT_SUCCESS);
 
    model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
    model.GenerateSoilProperties();

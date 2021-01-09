@@ -36,7 +36,6 @@ public:
    void GenerateSoilProperties();
    void CalculateSafetyFactor();
    void ReadSoilDataset(const std::string &soil_data, const std::string &root_data);
-   // void FindFOS();
 
    // ... Static Member Data ...
    static constexpr double gravity_        = 9.81;         // [m/s^2]
@@ -49,16 +48,19 @@ public:
    // ... Member Data ...
    size_t num_landslides;
 
-   KiLib::Raster slope_;
-   KiLib::Raster probslope_;
-   KiLib::Raster twi_;
-   KiLib::Raster soil_type_;
-   KiLib::Raster soil_depth_;
-   KiLib::Raster dusaf_;
-   std::vector<Landslide> landslide_;
-   std::vector<int> soil_id_;
+   KiLib::Stability::SafetyFactor::MDSTab SFCalculator;
+   KiLib::SoilDepth::TopModel             soilDepthCalc;
+
+   KiLib::Raster                    slope_;
+   KiLib::Raster                    probslope_;
+   KiLib::Raster                    twi_;
+   KiLib::Raster                    soil_type_;
+   KiLib::Raster                    soil_depth_;
+   KiLib::Raster                    dusaf_;
+   std::vector<Landslide>           landslide_;
+   std::vector<int>                 soil_id_;
    std::vector<std::vector<double>> z_;
-   KiLib::Raster pr_failure_;
+   KiLib::Raster                    pr_failure_;
 
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
@@ -98,7 +100,7 @@ private:
 
    std::mt19937_64 engine; // Engine so our can be consistent
 
-   KiLib::Raster TopModel_v3(const KiLib::Raster &ks, const KiLib::Raster &z);
+   KiLib::Raster CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTab_v2(
       const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
       const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
