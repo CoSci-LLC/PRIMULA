@@ -13,6 +13,11 @@ public:
 
    std::string outputPath;
 
+   const std::string &extension()
+   {
+      return this->defaultExtension;
+   };
+
 private:
    std::string slopePath;
    std::string twiPath;
@@ -20,6 +25,8 @@ private:
    std::string soilDepthPath;
    std::string dusafPath;
    std::string probslopePath;
+
+   std::string defaultExtension = ".tif";
 
    size_t num_landslides = 100;
    size_t seed           = 69420;
