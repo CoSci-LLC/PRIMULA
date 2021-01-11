@@ -30,7 +30,8 @@ int main(int argc, char **argv)
    model.GenerateSoilProperties();
    model.CalculateSafetyFactor();
 
-   model.pr_failure_.writeToFile(fs::path(config.outputPath) / fs::path("prob_failure.asc"));
+   model.pr_failure_.writeToFile(
+      (fs::path(config.outputPath) / fs::path("prob_failure")).string() + config.extension());
 
    return EXIT_SUCCESS;
 }

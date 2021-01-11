@@ -11,15 +11,16 @@ Config::Config(int argc, char **argv)
    parser.config_formatter(std::make_shared<CLI::ConfigTOML>());
 
    // clang-format off
-   parser.add_option("--slopePath",     this->slopePath,      "Path to slope Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--twiPath",       this->twiPath,        "Path to TWI Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--soilTypePath",  this->soilTypePath,   "Path to soil type Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--soilDepthPath", this->soilDepthPath,  "Path to soil depth Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--dusafPath",     this->dusafPath,      "Path to dusaf Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--probslopePath", this->probslopePath,  "Path to probslope Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--seed",          this->seed,           "Seed for RNG", true);
-   parser.add_option("--numLandslides", this->num_landslides, "The number of landslides to simulate", true);
-   parser.add_option("--outputPath",    this->outputPath,     "Path to output directory")->required();
+   parser.add_option("--slopePath",       this->slopePath,        "Path to slope Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--twiPath",         this->twiPath,          "Path to TWI Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--soilTypePath",    this->soilTypePath,     "Path to soil type Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--soilDepthPath",   this->soilDepthPath,    "Path to soil depth Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--dusafPath",       this->dusafPath,        "Path to dusaf Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--probslopePath",   this->probslopePath,    "Path to probslope Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters");
+   parser.add_option("--seed",            this->seed,             "Seed for RNG", true);
+   parser.add_option("--numLandslides",   this->num_landslides,   "The number of landslides to simulate", true);
+   parser.add_option("--outputPath",      this->outputPath,       "Path to output directory")->required();
    // clang-format on
 
    try

@@ -1,24 +1,18 @@
 cmake_minimum_required (VERSION 3.9)
 project (PRIMULA)
 
-#==============================================================================
-# Packages / Libraries
-#==============================================================================
-find_package(OpenMP)
-
 # Locate headers
 include_directories(src)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+#set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_EXTENSIONS OFF)
 
 #==============================================================================
 # PRIMULA
 #==============================================================================
 include(CMake/KiLib.cmake.in)
 include(CMake/CLI11.cmake.in)
-
 
 add_executable(
     PRIMULA 
@@ -27,4 +21,22 @@ add_executable(
     src/Config.cpp
 )
 
-target_link_libraries(PRIMULA OpenMP::OpenMP_CXX KiLib CLI11)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # using Clang
+    message(STATUS "Clang detected, adding compile flags")
+    target_compile_options(PRIMULA PRIVATE -Wall -Werror)
+    # Enforce C++17 features
+    target_compile_features(PRIMULA PRIVATE cxx_std_17)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # using GCC
+    message(STATUS "GCC detected, adding compile flags")
+    target_compile_options(PRIMULA PRIVATE -Wall -Werror)
+    # Enforce C++17 features
+    target_compile_features(PRIMULA PRIVATE cxx_std_17)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # using Visual Studio C++
+    message(STATUS "msvc detected, adding compile flags")
+    target_compile_options(PRIMULA PRIVATE  /std:c++latest /EHsc)
+endif()
+
+target_link_libraries(PRIMULA KiLib CLI11 tiff)
