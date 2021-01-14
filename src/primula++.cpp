@@ -17,7 +17,7 @@
 #include <stats.hpp>
 
 
-KiLib::Raster Primula::CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raster &z)
+KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
    KiLib::Raster W = KiLib::Raster::nodataLike(slope_);
 
@@ -25,7 +25,7 @@ KiLib::Raster Primula::CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raste
    {
       if (slope_(i) != slope_.nodata_value)
       {
-         W(i) = this->soilDepthCalc.ComputeDepth(rainfall_, ks(i), z(i), slope_(i), twi_(i));
+         W(i) = this->hydroModel.ComputeWetness(rainfall_, ks(i), z(i), slope_(i), twi_(i));
       }
    }
 
@@ -48,7 +48,7 @@ KiLib::Raster Primula::MDSTab_v2(
          continue;
       }
 
-      double SF = this->SFCalculator.ComputeSF(
+      double SF = this->SFModel.ComputeSF(
          phi(i), m(i), z(i), Crl(i), Crb(i), theta, this->slope_(i), gamma_s, slide.width_, slide.length_);
 
       FS(i) = SF;
@@ -374,7 +374,7 @@ void Primula::CalculateSafetyFactor()
             crb(j) = crl(j);
       }
 
-      auto m = CalcSoilDepth(permeability, depth);
+      auto m = CalcWetness(permeability, depth);
 
       auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma1[i], depth, crl, crb);
       for (size_t j = 0; j < this->pr_failure_.nData; j++)

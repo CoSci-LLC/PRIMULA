@@ -19,7 +19,7 @@ dusafPath="../tests/malonno/dusaf_MALONNO.asc"
 probslopePath="../tests/malonno/PROBSLOPE_MALONNO.asc"
 
 # File extension for output rasters | Type: TEXT
-outputExtension = ".tif"
+outputExtension = ".asc"
 
 # Seed for RNG
 seed=69420

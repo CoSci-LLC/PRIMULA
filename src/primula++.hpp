@@ -48,19 +48,22 @@ public:
    // ... Member Data ...
    size_t num_landslides;
 
-   KiLib::Stability::SafetyFactor::MDSTab SFCalculator;
-   KiLib::SoilDepth::TopModel             soilDepthCalc;
+   // Model to calculate safety factor
+   KiLib::Stability::SafetyFactor::MDSTab SFModel;
+   // Model to wetness
+   KiLib::Hydrology::TopModel hydroModel;
 
-   KiLib::Raster                    slope_;
-   KiLib::Raster                    probslope_;
-   KiLib::Raster                    twi_;
-   KiLib::Raster                    soil_type_;
-   KiLib::Raster                    soil_depth_;
-   KiLib::Raster                    dusaf_;
+   KiLib::Raster slope_;
+   KiLib::Raster probslope_;
+   KiLib::Raster twi_;
+   KiLib::Raster soil_type_;
+   KiLib::Raster soil_depth_;
+   KiLib::Raster dusaf_;
+   KiLib::Raster pr_failure_;
+
    std::vector<Landslide>           landslide_;
    std::vector<int>                 soil_id_;
    std::vector<std::vector<double>> z_;
-   KiLib::Raster                    pr_failure_;
 
    std::vector<double> Cr_grassland_;
    std::vector<double> Cr_shrubland_;
@@ -100,7 +103,7 @@ private:
 
    std::mt19937_64 engine; // Engine so our can be consistent
 
-   KiLib::Raster CalcSoilDepth(const KiLib::Raster &ks, const KiLib::Raster &z);
+   KiLib::Raster CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTab_v2(
       const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
       const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
