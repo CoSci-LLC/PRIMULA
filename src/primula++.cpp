@@ -15,6 +15,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
+#include "csv.hpp"
 
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
@@ -55,6 +56,38 @@ KiLib::Raster Primula::MDSTab_v2(
    }
 
    return FS;
+}
+
+void Primula::ReadLandCover(const std::string& landCover)
+{
+   // An array to contain the indices that the program cares about in case there are a bunch of filler columns.
+   // Uses the following ordering:
+   // 0: Code, 1: Min, 2: Max
+   int cols[3] = {0};
+   bool filled = false;
+
+   // assume no header even though there may be one
+   csv::CSVFormat format;
+   format.no_header();
+
+   csv::CSVReader reader(landCover, format);
+
+   for (csv::CSVRow& row : reader)
+   {
+      if (!filled)
+      {
+         cols[1] = row.size()-2;
+         cols[2] = row.size()-1;
+
+         filled = true;
+      }
+      
+      if (row[cols[0]].is_int())
+         this->landcover[row[cols[0]].get<size_t>()] = std::make_pair<double, double>(row[cols[1]].get<double>(), row[cols[2]].get<double>());
+   }
+
+   for (auto &[key, val] : this->landcover)
+      spdlog::info("{}:\t ({}, {})", key, val.first, val.second);
 }
 
 /**

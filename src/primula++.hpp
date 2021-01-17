@@ -36,6 +36,7 @@ public:
    void GenerateSoilProperties();
    void CalculateSafetyFactor();
    void ReadSoilDataset(const std::string &soil_data, const std::string &root_data);
+   void ReadLandCover(const std::string &landCover);
 
    // ... Static Member Data ...
    static constexpr double gravity_        = 9.81;         // [m/s^2]
@@ -85,6 +86,8 @@ public:
    //==========================================================================
 
 private:
+   std::unordered_map<size_t, std::pair<double, double>> landcover;
+
    std::vector<size_t> iteration_index;
 
    std::vector<double> Pa400;
