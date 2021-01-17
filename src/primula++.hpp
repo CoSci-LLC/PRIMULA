@@ -66,9 +66,6 @@ public:
    std::vector<int>                 soil_id_;
    std::vector<std::vector<double>> z_;
 
-   std::vector<double> Cr_grassland_;
-   std::vector<double> Cr_shrubland_;
-
    double veg_weight_ = 70.0;  // [kg/m2]
    double rainfall_   = 0.100; // [m/day]
 
@@ -89,14 +86,6 @@ private:
    std::unordered_map<double, std::pair<double, double>> landcover;
 
    std::vector<size_t> iteration_index;
-
-   std::vector<double> Pa400;
-   std::vector<double> Pa200;
-   std::vector<double> Fs800;
-   std::vector<double> Fs200;
-   std::vector<double> Cs150;
-   std::vector<double> Mf600;
-   std::vector<double> Mf300;
 
    std::vector<double> phi1;
    std::vector<double> phi2;
