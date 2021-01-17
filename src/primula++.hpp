@@ -86,7 +86,7 @@ public:
    //==========================================================================
 
 private:
-   std::unordered_map<size_t, std::pair<double, double>> landcover;
+   std::unordered_map<double, std::pair<double, double>> landcover;
 
    std::vector<size_t> iteration_index;
 

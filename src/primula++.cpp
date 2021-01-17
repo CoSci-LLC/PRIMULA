@@ -85,9 +85,6 @@ void Primula::ReadLandCover(const std::string& landCover)
       if (row[cols[0]].is_int())
          this->landcover[row[cols[0]].get<size_t>()] = std::make_pair<double, double>(row[cols[1]].get<double>(), row[cols[2]].get<double>());
    }
-
-   for (auto &[key, val] : this->landcover)
-      spdlog::info("{}:\t ({}, {})", key, val.first, val.second);
 }
 
 /**
@@ -362,44 +359,8 @@ void Primula::CalculateSafetyFactor()
             }
          }
 
-         // copy dusaf raster, replacing codes with appropriate forest density
-         switch ((int)dusaf_(j))
-         {
-         case 3211:
-         case 3212:
-         case 3221:
-            crl(j) = Cr_grassland_[i];
-            break;
-         case 332:
-         case 333:
-            crl(j) = Cr_shrubland_[i];
-            break;
-         case 3121:
-            crl(j) = this->Pa400[this->iteration_index[i]];
-            break;
-         case 3122:
-            crl(j) = this->Pa200[this->iteration_index[i]];
-            break;
-         case 31111:
-            crl(j) = this->Fs800[this->iteration_index[i]];
-            break;
-         case 31121:
-            crl(j) = this->Fs200[this->iteration_index[i]];
-            break;
-         case 3114:
-         case 222:
-            crl(j) = this->Cs150[this->iteration_index[i]];
-            break;
-         case 31311:
-            crl(j) = this->Mf600[this->iteration_index[i]];
-            break;
-         case 31321:
-            crl(j) = this->Mf300[this->iteration_index[i]];
-            break;
-         default:
-            crl(j) = 0;
-            break;
-         }
+         auto &[min, max] = this->landcover.at(dusaf_(j));
+         crl(j) = stats::runif(min, max, this->engine);
 
          if (depth(j) >= 0.5)
             crb(j) = 0;
