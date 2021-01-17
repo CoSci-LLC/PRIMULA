@@ -13,6 +13,7 @@ include_directories(src)
 #==============================================================================
 include(CMake/KiLib.cmake.in)
 include(CMake/CLI11.cmake.in)
+include(CMake/CSV.cmake.in)
 
 add_executable(
     PRIMULA 
@@ -24,13 +25,13 @@ add_executable(
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # using Clang
     message(STATUS "Clang detected, adding compile flags")
-    target_compile_options(PRIMULA PRIVATE -Wall -Werror)
+    target_compile_options(PRIMULA PRIVATE -Wall)
     # Enforce C++17 features
     target_compile_features(PRIMULA PRIVATE cxx_std_17)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # using GCC
     message(STATUS "GCC detected, adding compile flags")
-    target_compile_options(PRIMULA PRIVATE -Wall -Werror)
+    target_compile_options(PRIMULA PRIVATE -Wall)
     # Enforce C++17 features
     target_compile_features(PRIMULA PRIVATE cxx_std_17)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -39,4 +40,4 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(PRIMULA PRIVATE  /std:c++latest /EHsc)
 endif()
 
-target_link_libraries(PRIMULA KiLib CLI11 tiff)
+target_link_libraries(PRIMULA KiLib CLI11 tiff csv)
