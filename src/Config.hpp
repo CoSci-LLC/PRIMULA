@@ -18,6 +18,8 @@ public:
       return this->defaultExtension;
    };
 
+   std::string landCoverPath;
+
 private:
    std::string slopePath;
    std::string twiPath;
