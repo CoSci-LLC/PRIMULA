@@ -7,6 +7,7 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
+#include "csv.hpp"
 #include <KiLib/Utils/Random.hpp>
 #include <chrono>
 #include <cmath>
@@ -15,8 +16,25 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
-#include "csv.hpp"
 
+/**
+ * @brief Mimics python dictionary's get functionality for unordered maps
+ * 
+ * @param map The map that you're looking in
+ * @param key The key that you're looking for
+ * @param def The fallback value
+ * @return std::pair<double, double>& The key if it exists, or the follback value if it doesn't
+ */
+static std::pair<double, double>&
+get_or_default(std::unordered_map<double, std::pair<double, double>> map, double key, std::pair<double, double> def)
+{
+   std::pair<double, double>& out = def;
+
+   if (auto it = map.find(key); it != map.end())
+      out = it->second;
+   
+   return out;
+}
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
@@ -58,13 +76,13 @@ KiLib::Raster Primula::MDSTab_v2(
    return FS;
 }
 
-void Primula::ReadLandCover(const std::string& landCover)
+void Primula::ReadLandCover(const std::string &landCover)
 {
    // An array to contain the indices that the program cares about in case there are a bunch of filler columns.
    // Uses the following ordering:
    // 0: Code, 1: Min, 2: Max
-   int cols[3] = {0};
-   bool filled = false;
+   int  cols[3] = {0};
+   bool filled  = false;
 
    // assume no header even though there may be one
    csv::CSVFormat format;
@@ -72,18 +90,19 @@ void Primula::ReadLandCover(const std::string& landCover)
 
    csv::CSVReader reader(landCover, format);
 
-   for (csv::CSVRow& row : reader)
+   for (csv::CSVRow &row : reader)
    {
       if (!filled)
       {
-         cols[1] = row.size()-2;
-         cols[2] = row.size()-1;
+         cols[1] = row.size() - 2;
+         cols[2] = row.size() - 1;
 
          filled = true;
       }
-      
+
       if (row[cols[0]].is_int())
-         this->landcover[row[cols[0]].get<size_t>()] = std::make_pair<double, double>(row[cols[1]].get<double>(), row[cols[2]].get<double>());
+         this->landcover[row[cols[0]].get<size_t>()] =
+            std::make_pair<double, double>(row[cols[1]].get<double>(), row[cols[2]].get<double>());
    }
 }
 
@@ -278,8 +297,8 @@ void Primula::CalculateSafetyFactor()
             }
          }
 
-         auto &[min, max] = this->landcover.at(dusaf_(j));
-         crl(j) = stats::runif(min, max, this->engine);
+         auto& [min, max] = get_or_default(this->landcover, dusaf_(j), std::make_pair<double, double>(0, 0));
+         crl(j)           = stats::runif(min, max, this->engine);
 
          if (depth(j) >= 0.5)
             crb(j) = 0;
