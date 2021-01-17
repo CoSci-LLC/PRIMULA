@@ -194,80 +194,6 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
    ss.clear();
    col_pos.clear();
 
-   // ------------------------------
-   // Reading Root Data
-   // ------------------------------
-   fin.open(root_data, std::ios::in);
-   if (!fin.is_open())
-   {
-      spdlog::error("File '{}' failed to open", root_data);
-      exit(EXIT_FAILURE);
-   }
-
-   count = 0;
-   getline(fin, line);
-   ss.str(line);
-
-   while (ss.good() && getline(ss, word, ','))
-   {
-      // TODO: Find a cleaner way of doing this
-      if (
-         word.find("Pa400") || word.find("Pa200") || word.find("Fs800") || word.find("Fs200") || word.find("Cs150") ||
-         word.find("MF600") || word.find("MF300"))
-         col_pos[word] = count;
-      count++;
-   }
-
-   while (getline(fin, line))
-   {
-      // getline strips the last '\n' which is necessary to check for data in the last column
-      line += '\n';
-      state = '\n';
-      last  = 0;
-      count = 0;
-
-      for (size_t it = 0; it < line.size(); it++)
-      {
-         switch (line[it])
-         {
-         // Check if it is necessary to consider quataion
-         case '"':
-         case '\'':
-            if (state == line[it])
-               state = '\n';
-            else if (state == '\n')
-               state = line[it];
-            break;
-         case ',':
-            if (state != '\n')
-               break;
-         case '\n':
-            if (count == col_pos["Pa400"])
-               this->Pa400.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-            else if (count == col_pos["Pa200"])
-               this->Pa200.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-            else if (count == col_pos["Fs200"])
-               this->Fs200.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-            else if (count == col_pos["Fs800"])
-               this->Fs800.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-            else if (count == col_pos["MF300"])
-               this->Mf300.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-            else if (count == col_pos["MF600"])
-               this->Mf600.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-            else if (count == col_pos["Cs150"])
-               this->Cs150.emplace_back(std::stod(line.substr(last, it - last)) * 1000);
-
-            last = it + 1;
-            count++;
-            break;
-         }
-
-         // TODO: Find a way of terminating the loop early in a neat manner.
-      }
-   }
-
-   fin.close();
-
    spdlog::info("Reading Dataset elapsed time: {}", sw);
 }
 
@@ -298,13 +224,6 @@ void Primula::GenerateSoilProperties()
       slide.width_  = sqrt((slide.area_ * 1.0) / (l2w * 1.0));
       slide.length_ = slide.width_ * l2w;
       this->landslide_.push_back(slide);
-
-      // pick random forest density
-      // TODO: Replace with vectorized discrete uniform operation
-      this->iteration_index.emplace_back(rand() % this->Pa200.size());
-
-      this->Cr_grassland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 5, 7.5) * 1000);
-      this->Cr_shrubland_.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0, 15) * 1000);
    }
 
    spdlog::info("Soil generation elapsed time: {}", sw);
