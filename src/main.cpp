@@ -28,7 +28,6 @@ int main(int argc, char **argv)
 
    model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
    model.ReadLandCover(config.landCoverPath);
-   return EXIT_SUCCESS;
    model.GenerateSoilProperties();
    model.CalculateSafetyFactor();
 
