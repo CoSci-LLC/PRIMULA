@@ -17,25 +17,6 @@
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
 
-/**
- * @brief Mimics python dictionary's get functionality for unordered maps
- * 
- * @param map The map that you're looking in
- * @param key The key that you're looking for
- * @param def The fallback value
- * @return std::pair<double, double>& The key if it exists, or the follback value if it doesn't
- */
-static std::pair<double, double>&
-get_or_default(std::unordered_map<double, std::pair<double, double>> map, double key, std::pair<double, double> def)
-{
-   std::pair<double, double>& out = def;
-
-   if (auto it = map.find(key); it != map.end())
-      out = it->second;
-   
-   return out;
-}
-
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
    KiLib::Raster W = KiLib::Raster::nodataLike(slope_);
@@ -297,7 +278,7 @@ void Primula::CalculateSafetyFactor()
             }
          }
 
-         auto& [min, max] = get_or_default(this->landcover, dusaf_(j), std::make_pair<double, double>(0, 0));
+         auto& [min, max] = this->landcover.at(dusaf_(j));
          crl(j)           = stats::runif(min, max, this->engine);
 
          if (depth(j) >= 0.5)
