@@ -280,8 +280,13 @@ void Primula::CalculateSafetyFactor()
 {
    spdlog::stopwatch sw;
 
-   this->pr_failure_              = KiLib::Raster::zerosLike(this->probslope_);
-   this->pr_failure_.nodata_value = -9999;
+   this->probslope_.nodata_value = -9999;
+   this->pr_failure_             = KiLib::Raster::nodataLike(this->probslope_);
+
+   for (size_t i : this->validIndices)
+   {
+      this->pr_failure_(i) = 0.0;
+   }
 
    for (unsigned int i = 0; i < num_landslides; i++)
    {
@@ -295,14 +300,11 @@ void Primula::CalculateSafetyFactor()
       for (size_t j : this->validIndices)
       {
          // if soil 1 or 2, translate info to rasters
-         if (this->soil_type_(j))
-         {
-            auto &phiv = (int)this->soil_type_(j) == 1 ? this->phi1 : this->phi2;
-            auto &ksv  = (int)this->soil_type_(j) == 1 ? this->ks1 : this->ks2;
-            // use the number to determine which element of the vector to access
-            friction_angle(j) = phiv[i] * M_PI / 180.0;
-            permeability(j)   = ksv[i] * M_PI / 180.0;
-         }
+         auto &phiv = (int)this->soil_type_(j) == 1 ? this->phi1 : this->phi2;
+         auto &ksv  = (int)this->soil_type_(j) == 1 ? this->ks1 : this->ks2;
+         // use the number to determine which element of the vector to access
+         friction_angle(j) = phiv[i] * M_PI / 180.0;
+         permeability(j)   = ksv[i] * M_PI / 180.0;
 
          if (this->soil_depth_(j))
          {
@@ -365,26 +367,19 @@ void Primula::CalculateSafetyFactor()
       auto m = CalcWetness(permeability, depth);
 
       auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma1[i], depth, crl, crb);
-      for (size_t j = 0; j < this->pr_failure_.nData; j++)
+      for (size_t i : this->validIndices)
       {
-         if (this->probslope_(j) == this->probslope_.nodata_value)
+         if (FS(i) < 1 && FS(i) > 0)
          {
-            this->pr_failure_(j) = this->pr_failure_.nodata_value;
-         }
-         else if (FS(j) < 1 && FS(j) > 0)
-         {
-            this->pr_failure_(j) += FS(j);
+            this->pr_failure_(i) += FS(i);
          }
       }
    }
 
    // get average of sum of failure probabilities
-   for (auto &c : this->pr_failure_.data)
+   for (size_t i : this->validIndices)
    {
-      if (c != this->pr_failure_.nodata_value)
-         c /= num_landslides;
-      else
-         c = -9999;
+      this->pr_failure_(i) /= num_landslides;
    }
 
    spdlog::info("Landslide generation elapsed time: {}", sw);
