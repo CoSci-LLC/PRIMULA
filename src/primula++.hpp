@@ -81,7 +81,8 @@ public:
    double l2w_sigma_ = sqrt(0.037396); // [dimensionless]
 
    std::vector<size_t> validIndices;
-   // Looks at all rasters and finds the indices where ALL rasters have valid data, stores in a vector called validIndices
+   // Looks at all rasters and finds the indices where ALL rasters have valid data, stores in a vector called
+   // validIndices
    void syncValidIndices();
 
 

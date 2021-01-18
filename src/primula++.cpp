@@ -39,7 +39,8 @@ KiLib::Raster Primula::MDSTab_v2(
    for (size_t i : this->validIndices)
    {
       double SF = this->SFModel.ComputeSF(
-         phi(i), m(i), z(i), Crl(i), Crb(i), this->probslope_(i), this->slope_(i), gamma_s, slide.width_, slide.length_);
+         phi(i), m(i), z(i), Crl(i), Crb(i), this->probslope_(i), this->slope_(i), gamma_s, slide.width_,
+         slide.length_);
 
       FS(i) = SF;
    }
@@ -391,7 +392,8 @@ void Primula::CalculateSafetyFactor()
 
 void Primula::syncValidIndices()
 {
-   for (size_t i = 0; i < this->slope_.nData; i++) {
+   for (size_t i = 0; i < this->slope_.nData; i++)
+   {
       if (this->slope_(i) == this->slope_.nodata_value)
          continue;
       if (this->twi_(i) == this->twi_.nodata_value)
@@ -408,5 +410,7 @@ void Primula::syncValidIndices()
       this->validIndices.push_back(i);
    }
 
-   spdlog::info("{} / {} Raster indices have valid data. Only computing on valid data.", this->validIndices.size(), this->slope_.nData);
+   spdlog::info(
+      "{} / {} Raster indices have valid data. Only computing on valid data.", this->validIndices.size(),
+      this->slope_.nData);
 }
