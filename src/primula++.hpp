@@ -60,8 +60,6 @@ public:
    KiLib::Raster dusaf_;
    KiLib::Raster pr_failure_;
 
-   KiLib::Raster probslope_;
-
    std::vector<Landslide>           landslide_;
    std::vector<int>                 soil_id_;
    std::vector<std::vector<double>> z_;

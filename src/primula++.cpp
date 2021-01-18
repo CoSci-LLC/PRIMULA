@@ -19,7 +19,7 @@
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   KiLib::Raster W = KiLib::Raster::nodataLike(this->probslope_);
+   KiLib::Raster W = KiLib::Raster::nodataLike(this->slope_);
 
    for (size_t i : this->validIndices)
    {
@@ -33,14 +33,13 @@ KiLib::Raster Primula::MDSTab_v2(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
-   KiLib::Raster FS = KiLib::Raster::nodataLike(this->probslope_);
+   KiLib::Raster FS = KiLib::Raster::nodataLike(this->slope_);
 
    // calculate factor of safety for each raster cell
    for (size_t i : this->validIndices)
    {
       double SF = this->SFModel.ComputeSF(
-         phi(i), m(i), z(i), Crl(i), Crb(i), this->probslope_(i), this->slope_(i), gamma_s, slide.width_,
-         slide.length_);
+         phi(i), m(i), z(i), Crl(i), Crb(i), this->slope_(i), this->slope_(i), gamma_s, slide.width_, slide.length_);
 
       FS(i) = SF;
    }
@@ -280,8 +279,8 @@ void Primula::CalculateSafetyFactor()
 {
    spdlog::stopwatch sw;
 
-   this->probslope_.nodata_value = -9999;
-   this->pr_failure_             = KiLib::Raster::nodataLike(this->probslope_);
+   this->slope_.nodata_value = -9999;
+   this->pr_failure_         = KiLib::Raster::nodataLike(this->slope_);
 
    for (size_t i : this->validIndices)
    {
@@ -290,11 +289,11 @@ void Primula::CalculateSafetyFactor()
 
    for (unsigned int i = 0; i < num_landslides; i++)
    {
-      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->probslope_);
-      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->probslope_);
-      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->probslope_);
-      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->probslope_);
-      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->probslope_);
+      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->slope_);
+      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->slope_);
+      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->slope_);
+      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->slope_);
+      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->slope_);
 
       // go through each raster cell
       for (size_t j : this->validIndices)
@@ -398,8 +397,6 @@ void Primula::syncValidIndices()
       if (this->soil_depth_(i) == this->soil_depth_.nodata_value)
          continue;
       if (this->dusaf_(i) == this->dusaf_.nodata_value)
-         continue;
-      if (this->probslope_(i) == this->probslope_.nodata_value)
          continue;
 
       this->validIndices.push_back(i);

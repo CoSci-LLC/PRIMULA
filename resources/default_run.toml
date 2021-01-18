@@ -15,9 +15,6 @@ soilDepthPath="../tests/malonno/soils_MALONNO.asc"
 # Path to dusaf Raster
 dusafPath="../tests/malonno/dusaf_MALONNO.asc"
 
-# Path to probslope Raster
-probslopePath="../tests/malonno/PROBSLOPE_MALONNO.asc"
-
 # File extension for output rasters | Type: TEXT
 outputExtension = ".asc"
 
