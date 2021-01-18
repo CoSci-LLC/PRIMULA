@@ -19,14 +19,11 @@
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   KiLib::Raster W = KiLib::Raster::nodataLike(slope_);
+   KiLib::Raster W = KiLib::Raster::nodataLike(this->probslope_);
 
-   for (size_t i = 0; i < ks.nData; i++)
+   for (size_t i : this->validIndices)
    {
-      if (slope_(i) != slope_.nodata_value)
-      {
-         W(i) = this->hydroModel.ComputeWetness(rainfall_, ks(i), z(i), slope_(i), twi_(i));
-      }
+      W(i) = this->hydroModel.ComputeWetness(rainfall_, ks(i), z(i), slope_(i), twi_(i));
    }
 
    return W;
@@ -36,20 +33,13 @@ KiLib::Raster Primula::MDSTab_v2(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
-   KiLib::Raster FS = KiLib::Raster::zerosLike(m);
+   KiLib::Raster FS = KiLib::Raster::nodataLike(this->probslope_);
 
    // calculate factor of safety for each raster cell
-   for (size_t i = 0; i < FS.nData; i++)
+   for (size_t i : this->validIndices)
    {
-      double theta = this->probslope_(i);
-      // run calculation if probslope is non-empty
-      if (theta == this->probslope_.nodata_value)
-      {
-         continue;
-      }
-
       double SF = this->SFModel.ComputeSF(
-         phi(i), m(i), z(i), Crl(i), Crb(i), theta, this->slope_(i), gamma_s, slide.width_, slide.length_);
+         phi(i), m(i), z(i), Crl(i), Crb(i), this->probslope_(i), this->slope_(i), gamma_s, slide.width_, slide.length_);
 
       FS(i) = SF;
    }
@@ -294,18 +284,15 @@ void Primula::CalculateSafetyFactor()
 
    for (unsigned int i = 0; i < num_landslides; i++)
    {
-      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->soil_type_);
-      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->soil_type_);
-      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->soil_type_);
-      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->soil_type_);
-      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->soil_type_);
+      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->probslope_);
+      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->probslope_);
+      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->probslope_);
+      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->probslope_);
+      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->probslope_);
 
       // go through each raster cell
-      for (size_t j = 0; j < this->soil_type_.nData; j++)
+      for (size_t j : this->validIndices)
       {
-         if (this->probslope_(j) == this->probslope_.nodata_value)
-            continue;
-
          // if soil 1 or 2, translate info to rasters
          if (this->soil_type_(j))
          {
