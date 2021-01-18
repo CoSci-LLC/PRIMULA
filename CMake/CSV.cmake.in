@@ -1,0 +1,16 @@
+include(FetchContent)
+
+# compile
+FetchContent_Populate(
+  csv-parser_proj
+  QUIET
+  GIT_REPOSITORY  https://github.com/vincentlaucsb/csv-parser
+  GIT_TAG         2.1.0.1
+  SOURCE_DIR      ${CMAKE_SOURCE_DIR}/lib/csv-parser
+)
+
+# Add this to the current build
+add_subdirectory(${csv-parser_proj_SOURCE_DIR} ${csv-parser_proj_SOURCE_DIR}/build)
+
+# Add the include directory into this project
+include_directories(${csv-parser_proj_SOURCE_DIR}/include/)
