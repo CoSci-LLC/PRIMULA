@@ -52,6 +52,19 @@ Primula Config::configModel()
    model.dusaf_      = KiLib::Raster(this->dusafPath);
    model.probslope_  = KiLib::Raster(this->probslopePath);
 
+   // Make sure raster dimension agree
+   for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.soil_depth_, &model.dusaf_, &model.probslope_}) {
+      if (rast->nRows != model.slope_.nRows) {
+         spdlog::error("Raster row sizes dont agree!");
+         exit(EXIT_FAILURE);
+      }
+
+      if (rast->nCols != model.slope_.nCols) {
+         spdlog::error("Raster col sizes dont agree!");
+         exit(EXIT_FAILURE);
+      }
+   }
+
    return model;
 }
 
