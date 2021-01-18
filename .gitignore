@@ -10,5 +10,5 @@ build/
 tests/*.asc
 .vscode/*
 .vs/*
-lib
+lib/*
 *.bat
