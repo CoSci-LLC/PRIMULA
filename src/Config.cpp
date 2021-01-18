@@ -65,6 +65,8 @@ Primula Config::configModel()
       }
    }
 
+   model.syncValidIndices();
+
    return model;
 }
 

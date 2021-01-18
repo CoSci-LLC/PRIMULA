@@ -401,3 +401,25 @@ void Primula::CalculateSafetyFactor()
 
    spdlog::info("Landslide generation elapsed time: {}", sw);
 }
+
+void Primula::syncValidIndices()
+{
+   for (size_t i = 0; i < this->slope_.nData; i++) {
+      if (this->slope_(i) == this->slope_.nodata_value)
+         continue;
+      if (this->twi_(i) == this->twi_.nodata_value)
+         continue;
+      if (this->soil_type_(i) == this->soil_type_.nodata_value)
+         continue;
+      if (this->soil_depth_(i) == this->soil_depth_.nodata_value)
+         continue;
+      if (this->dusaf_(i) == this->dusaf_.nodata_value)
+         continue;
+      if (this->probslope_(i) == this->probslope_.nodata_value)
+         continue;
+
+      this->validIndices.push_back(i);
+   }
+
+   spdlog::info("{} / {} Raster indices have valid data. Only computing on valid data.", this->validIndices.size(), this->slope_.nData);
+}
