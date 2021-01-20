@@ -54,7 +54,6 @@ public:
    KiLib::Hydrology::TopModel hydroModel;
 
    KiLib::Raster slope_;
-   KiLib::Raster probslope_;
    KiLib::Raster twi_;
    KiLib::Raster soil_type_;
    KiLib::Raster soil_depth_;
@@ -78,6 +77,11 @@ public:
    // Normal distribution parameters for length-to-width ratio
    double l2w_mu_    = 0.1528;         // [dimensionless]
    double l2w_sigma_ = sqrt(0.037396); // [dimensionless]
+
+   std::vector<size_t> validIndices;
+   // Looks at all rasters and finds the indices where ALL rasters have valid data, stores in a vector called
+   // validIndices
+   void syncValidIndices();
 
 
    //==========================================================================
