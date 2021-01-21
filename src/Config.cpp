@@ -16,7 +16,6 @@ Config::Config(int argc, char **argv)
    parser.add_option("--soilTypePath",    this->soilTypePath,     "Path to soil type Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--soilDepthPath",   this->soilDepthPath,    "Path to soil depth Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--dusafPath",       this->dusafPath,        "Path to dusaf Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--probslopePath",   this->probslopePath,    "Path to probslope Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--landCoverPath",   this->landCoverPath,    "Path to the landcover CSV")->check(CLI::ExistingFile)->required();
    parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters");
    parser.add_option("--seed",            this->seed,             "Seed for RNG", true);
@@ -51,7 +50,24 @@ Primula Config::configModel()
    model.soil_type_  = KiLib::Raster(this->soilTypePath);
    model.soil_depth_ = KiLib::Raster(this->soilDepthPath);
    model.dusaf_      = KiLib::Raster(this->dusafPath);
-   model.probslope_  = KiLib::Raster(this->probslopePath);
+
+   // Make sure raster dimension agree
+   for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.soil_depth_, &model.dusaf_})
+   {
+      if (rast->nRows != model.slope_.nRows)
+      {
+         spdlog::error("Raster row sizes dont agree!");
+         exit(EXIT_FAILURE);
+      }
+
+      if (rast->nCols != model.slope_.nCols)
+      {
+         spdlog::error("Raster col sizes dont agree!");
+         exit(EXIT_FAILURE);
+      }
+   }
+
+   model.syncValidIndices();
 
    return model;
 }

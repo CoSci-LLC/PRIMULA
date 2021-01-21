@@ -26,7 +26,6 @@ private:
    std::string soilTypePath;
    std::string soilDepthPath;
    std::string dusafPath;
-   std::string probslopePath;
 
    std::string defaultExtension = ".tif";
 
