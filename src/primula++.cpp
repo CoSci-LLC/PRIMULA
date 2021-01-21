@@ -267,7 +267,7 @@ void Primula::CalculateSafetyFactor()
             }
          }
 
-         auto& [min, max] = this->landcover.at(dusaf_(j));
+         auto& [min, max] = this->landcover.at(this->landuse(j));
          crl(j)           = stats::runif(min, max, this->engine);
 
          if (depth(j) >= 0.5)
@@ -309,7 +309,7 @@ void Primula::syncValidIndices()
          continue;
       if (this->soil_depth_(i) == this->soil_depth_.nodata_value)
          continue;
-      if (this->dusaf_(i) == this->dusaf_.nodata_value)
+      if (this->landuse(i) == this->landuse.nodata_value)
          continue;
 
       this->validIndices.push_back(i);

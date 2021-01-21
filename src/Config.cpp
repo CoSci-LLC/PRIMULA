@@ -15,7 +15,7 @@ Config::Config(int argc, char **argv)
    parser.add_option("--twiPath",         this->twiPath,          "Path to TWI Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--soilTypePath",    this->soilTypePath,     "Path to soil type Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--soilDepthPath",   this->soilDepthPath,    "Path to soil depth Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--dusafPath",       this->dusafPath,        "Path to dusaf Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--landUsePath",     this->landUsePath,      "Path to dusaf Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--landCoverPath",   this->landCoverPath,    "Path to the landcover CSV")->check(CLI::ExistingFile)->required();
    parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters");
    parser.add_option("--seed",            this->seed,             "Seed for RNG", true);
@@ -49,7 +49,7 @@ Primula Config::configModel()
    model.twi_        = KiLib::Raster(this->twiPath);
    model.soil_type_  = KiLib::Raster(this->soilTypePath);
    model.soil_depth_ = KiLib::Raster(this->soilDepthPath);
-   model.dusaf_      = KiLib::Raster(this->dusafPath);
+   model.landuse     = KiLib::Raster(this->landUsePath);
 
    // Make sure raster dimension agree
    for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.soil_depth_, &model.dusaf_})

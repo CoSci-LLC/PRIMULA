@@ -25,7 +25,7 @@ private:
    std::string twiPath;
    std::string soilTypePath;
    std::string soilDepthPath;
-   std::string dusafPath;
+   std::string landUsePath;
 
    std::string defaultExtension = ".tif";
 

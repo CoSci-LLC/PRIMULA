@@ -58,7 +58,7 @@ public:
    KiLib::Raster twi_;
    KiLib::Raster soil_type_;
    KiLib::Raster soil_depth_;
-   KiLib::Raster dusaf_;
+   KiLib::Raster landuse;
    KiLib::Raster pr_failure_;
 
    std::vector<Landslide>           landslide_;
