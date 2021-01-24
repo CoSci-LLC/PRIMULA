@@ -49,142 +49,42 @@ KiLib::Raster Primula::MDSTab_v2(
 
 void Primula::ReadLandCover(const std::string &landCover)
 {
-   // An array to contain the indices that the program cares about in case there are a bunch of filler columns.
-   // Uses the following ordering:
-   // 0: Code, 1: Min, 2: Max
-   int  cols[3] = {0};
-   bool filled  = false;
-
-   // assume no header even though there may be one
-   csv::CSVFormat format;
-   format.no_header();
-
-   csv::CSVReader reader(landCover, format);
+   csv::CSVReader reader(landCover);
 
    for (csv::CSVRow &row : reader)
    {
-      if (!filled)
-      {
-         cols[1] = row.size() - 2;
-         cols[2] = row.size() - 1;
-
-         filled = true;
-      }
-
-      if (row[cols[0]].is_int())
-         this->landcover[row[cols[0]].get<size_t>()] =
-            std::make_pair<double, double>(row[cols[1]].get<double>(), row[cols[2]].get<double>());
+      if (row[0].is_int())
+         this->landcover[row[0].get<size_t>()] = {row[4].get<double>(), row[5].get<double>()};
    }
 }
 
-/**
- * @brief Reads the data from the appropriate CSV files and populates hidden datastructures in the class
- *
- * @param soil_data The relative path to the soil data
- * @param root_data The relative path to the root data
- */
-void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &root_data)
+void Primula::ReadSoilDepth(const std::string &soilDepth)
 {
+   csv::CSVReader reader(soilDepth);
 
-   spdlog::stopwatch sw;
-
-   size_t last  = 0;
-   size_t count = 0;
-   int    cod   = -1;
-   int    prof  = -1;
-   char   state = '\n';
-
-   std::unordered_map<std::string, size_t> col_pos;
-   std::stringstream                       ss;
-   std::string                             line;
-   std::string                             word;
-
-   std::ifstream fin;
-
-   // TODO: Consider replacing this with a CSV parsing library
-
-   // ------------------------------
-   // Reading Soil Data
-   // ------------------------------
-   fin.open(soil_data, std::ios::in);
-   if (!fin.is_open())
+   for (csv::CSVRow &row : reader)
    {
-      spdlog::error("File '{}' failed to open", soil_data);
-      exit(EXIT_FAILURE);
+      if (row[0].is_int())
+         this->soilDepth[row[0].get<size_t>()] = {row[2].get<double>(), row[3].get<double>()};
    }
+}
 
-   count = 0;
-   getline(fin, line);
-   ss.str(line);
+void Primula::ReadPhysProps(const std::string &physProps)
+{
+   csv::CSVReader reader(physProps);
 
-   while (ss.good() && getline(ss, word, ','))
+   for (csv::CSVRow &row : reader)
    {
-      col_pos[word] = count++;
+      if (!row[0].is_int())
+         continue;
+
+      this->physProps[row[0].get<size_t>()] = {
+         row[2].get<double>(), row[3].get<double>(), // Min Gamma, Max Gamma
+         row[4].get<double>(), row[5].get<double>(), // Min Phi, Max Phi
+         row[6].get<double>(), row[7].get<double>(), // Min Cohesion, Max Cohesion
+         row[8].get<double>(), row[9].get<double>(), // Min Ks, Max Ks
+      };
    }
-
-   while (getline(fin, line))
-   {
-      // getline strips the last '\n' which is necessary to check for data in the last column
-      line += '\n';
-      state = '\n';
-      last  = 0;
-      count = 0;
-      cod   = -1;
-      prof  = -1;
-
-      for (size_t it = 0; it < line.size(); it++)
-      {
-
-         switch (line[it])
-         {
-         // Check if it is necessary to consider quataion
-         case '"':
-         case '\'':
-            if (state == line[it])
-               state = '\n';
-            else if (state == '\n')
-               state = line[it];
-            break;
-         case ',':
-            if (state != '\n')
-               break;
-         case '\n':
-            if (count == col_pos["COD_UTS1"])
-               cod = std::stoi(line.substr(last, it - last));
-            else if (count == col_pos["PROF_UTILE"])
-               prof = std::stoi(line.substr(last, it - last));
-
-            state = '\n';
-            last  = it + 1;
-            count++;
-            break;
-         }
-
-         if (count > std::max(col_pos["COD_UTS1"], col_pos["PROF_UTILE"]))
-            break;
-      }
-
-      if (std::find(this->soil_id_.begin(), this->soil_id_.end(), cod) == this->soil_id_.end())
-      {
-         this->soil_id_.push_back(cod);
-         auto max_z = prof / 100.0;
-
-         std::vector<double> rand;
-
-         for (unsigned int i = 0; i < this->num_landslides; i++)
-         {
-            rand.push_back(
-               KiLib::Random::qtri(stats::runif(0, 1, engine), (2.0 / 3.0) * max_z, max_z, (3.0 / 4.0) * max_z));
-         }
-         this->z_.push_back(rand);
-      }
-   }
-
-   fin.close();
-   ss.clear();
-   col_pos.clear();
-
-   spdlog::info("Reading Dataset elapsed time: {}", sw);
 }
 
 
@@ -195,18 +95,30 @@ void Primula::ReadSoilDataset(const std::string &soil_data, const std::string &r
 void Primula::GenerateSoilProperties()
 {
    spdlog::stopwatch sw;
+   
+   for (auto const& [soilID, prop] : this->physProps)
+   {
+      std::vector<double> tPhi      = KiLib::Random::runif(this->num_landslides, 0, 1, this->engine);
+      std::vector<double> tGamma    = KiLib::Random::runif(this->num_landslides, 0, 1, this->engine);
+      std::vector<double> tKs       = KiLib::Random::runif(this->num_landslides, 0, 1, this->engine);
+      std::vector<double> tCohesion = KiLib::Random::runif(this->num_landslides, 0, 1, this->engine);
+
+      tPhi      = stats::qunif(tPhi, prop.minPhi, prop.maxPhi);
+      tGamma    = stats::qunif(tGamma, prop.minGamma, prop.maxGamma);
+      tKs       = stats::qunif(tKs, prop.minKs, prop.maxKs);
+      tCohesion = stats::qunif(tCohesion, prop.minCohesion, prop.maxCohesion);
+
+      std::transform(tGamma.begin(), tGamma.end(), tGamma.begin(), [&](double v) -> double { return v*1000.0; });
+
+      this->phi[soilID]      = tPhi;
+      this->gamma[soilID]    = tGamma;
+      this->ks[soilID]       = tKs;
+      this->cohesion[soilID] = tCohesion;
+   }
 
    for (size_t i = 0; i < this->num_landslides; i++)
    {
       Landslide slide;
-
-      // generate random soil properties
-
-      this->phi1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 30, 40));
-      this->phi2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 35, 40));
-      this->gamma1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 17, 19) * 1000);
-      this->ks1.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
-      this->ks2.push_back(stats::qunif(stats::runif(0, 1, this->engine), 0.5, 100));
 
       // generate random landslide properties
       slide.area_   = pow(10, stats::qnorm(stats::runif(0, 1, this->engine), this->area_mu_, this->area_sigma_));
@@ -238,6 +150,7 @@ void Primula::CalculateSafetyFactor()
 
    for (unsigned int i = 0; i < num_landslides; i++)
    {
+      spdlog::info("Landslide {}", i);
       KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->slope_);
       KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->slope_);
       KiLib::Raster depth          = KiLib::Raster::zerosLike(this->slope_);
@@ -248,27 +161,19 @@ void Primula::CalculateSafetyFactor()
       for (size_t j : this->validIndices)
       {
          // if soil 1 or 2, translate info to rasters
-         auto &phiv = (int)this->soil_type_(j) == 1 ? this->phi1 : this->phi2;
-         auto &ksv  = (int)this->soil_type_(j) == 1 ? this->ks1 : this->ks2;
-         // use the number to determine which element of the vector to access
-         friction_angle(j) = phiv[i] * M_PI / 180.0;
-         permeability(j)   = ksv[i] * M_PI / 180.0;
+         double phiV      = this->phi.at(this->soil_type_(j))[i];
+         double ksV       = this->ks.at(this->soil_type_(j))[i];
+         // double cohesionV = this->Cohesion[this->soil_type_(j)][i]; Currently unused!!!!!!!!!!!!!!!
+         // double gammaV    = this->gamma[this->soil_type_(j)][i]; Currently unused!!!!!!!!!!!!!!!
 
-         if (this->soil_depth_(j))
-         {
-            // add the depth of the soil id in the raster to another raster
-            for (size_t k = 0; k < this->soil_id_.size(); k++)
-            {
-               if (this->soil_depth_(j) == this->soil_id_[k])
-               {
-                  depth(j) = z_[k][i];
-                  break;
-               }
-            }
-         }
+         friction_angle(j) = phiV * M_PI / 180.0;
+         permeability(j)   = ksV * M_PI / 180.0;
 
-         auto& [min, max] = this->landcover.at(this->landuse(j));
-         crl(j)           = stats::runif(min, max, this->engine);
+         auto& [minLC, maxLC] = this->landcover.at(this->landuse(j));
+         crl(j)               = stats::runif(minLC, maxLC, this->engine);
+
+         auto &[minSD, maxSD] = this->soilDepth.at(this->soil_type_(j));
+         depth(j)             = stats::runif(minSD, maxSD, this->engine);
 
          if (depth(j) >= 0.5)
             crb(j) = 0;
@@ -278,7 +183,7 @@ void Primula::CalculateSafetyFactor()
 
       auto m = CalcWetness(permeability, depth);
 
-      auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma1[i], depth, crl, crb);
+      auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma.at(1)[i], depth, crl, crb);
       for (size_t i : this->validIndices)
       {
          if (FS(i) < 1 && FS(i) > 0)
@@ -306,8 +211,6 @@ void Primula::syncValidIndices()
       if (this->twi_(i) == this->twi_.nodata_value)
          continue;
       if (this->soil_type_(i) == this->soil_type_.nodata_value)
-         continue;
-      if (this->soil_depth_(i) == this->soil_depth_.nodata_value)
          continue;
       if (this->landuse(i) == this->landuse.nodata_value)
          continue;

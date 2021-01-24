@@ -1,7 +1,7 @@
 import numpy as np
 
-p1 = "build/out_malonno/prob_failure.asc"
-p2 = "resources/prob_failure_ref.asc"
+p1 = "build/Study_Test_UNIPV/prob_failure.asc"
+p2 = "../PRIMULATests/Tests/Study_Test_UNIPV/reference_probls.asc"
 
 a = np.loadtxt(p1, skiprows=6)
 b = np.loadtxt(p2, skiprows=6)

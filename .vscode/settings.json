@@ -71,7 +71,20 @@
         "variant": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "forward_list": "cpp",
+        "semaphore": "cpp",
+        "__functional_base": "cpp",
+        "locale": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "regex": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "ios": "cpp",
+        "__bit_reference": "cpp",
+        "filesystem": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

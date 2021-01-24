@@ -5,22 +5,34 @@
 
 namespace fs = std::filesystem;
 
+// LandCover.csv          : Soil probability data [Codice, Uso del suolo, Descrizione, Description, Min, Max]
+// LANDUSE.tif            : Maps into LandCover.csv
+// PhysicalProperties.csv : gamma, phi, cohesion, ks
+// slope_rad.tif          : slope in radians
+// SoilDepth.csv          : min/max soil depth for soil ID
+// SOILS.tif              : Maps into soil depth
+// TWI.tif                : Topographical wetness index
+
 Config::Config(int argc, char **argv)
 {
    parser.set_config("--config");
    parser.config_formatter(std::make_shared<CLI::ConfigTOML>());
 
    // clang-format off
-   parser.add_option("--slopePath",       this->slopePath,        "Path to slope Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--twiPath",         this->twiPath,          "Path to TWI Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--slopePath",       this->slopePath,        "Path to slope Raster")->check(CLI::ExistingFile)->required();
    parser.add_option("--soilTypePath",    this->soilTypePath,     "Path to soil type Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--soilDepthPath",   this->soilDepthPath,    "Path to soil depth Raster")->check(CLI::ExistingFile)->required();
-   parser.add_option("--landUsePath",     this->landUsePath,      "Path to dusaf Raster")->check(CLI::ExistingFile)->required();
+   parser.add_option("--landUsePath",     this->landUsePath,      "Path to land use Raster")->check(CLI::ExistingFile)->required();
+
+   parser.add_option("--soilDepthPath",   this->soilDepthPath,    "Path to soil depth CSV")->check(CLI::ExistingFile)->required();
    parser.add_option("--landCoverPath",   this->landCoverPath,    "Path to the landcover CSV")->check(CLI::ExistingFile)->required();
-   parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters");
+   parser.add_option("--physPropPath",    this->physPropPath,     "Path to the Physical Properties CSV")->check(CLI::ExistingFile)->required();
+
+   parser.add_option("--outputPath",      this->outputPath,       "Path to output directory")->required();
+
+   parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters", true);
    parser.add_option("--seed",            this->seed,             "Seed for RNG", true);
    parser.add_option("--numLandslides",   this->num_landslides,   "The number of landslides to simulate", true);
-   parser.add_option("--outputPath",      this->outputPath,       "Path to output directory")->required();
    // clang-format on
 
    try
@@ -45,14 +57,13 @@ Primula Config::configModel()
 {
    Primula model(this->num_landslides, this->seed);
 
-   model.slope_      = KiLib::Raster(this->slopePath);
    model.twi_        = KiLib::Raster(this->twiPath);
+   model.slope_      = KiLib::Raster(this->slopePath);
    model.soil_type_  = KiLib::Raster(this->soilTypePath);
-   model.soil_depth_ = KiLib::Raster(this->soilDepthPath);
    model.landuse     = KiLib::Raster(this->landUsePath);
 
    // Make sure raster dimension agree
-   for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.soil_depth_, &model.dusaf_})
+   for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.landuse})
    {
       if (rast->nRows != model.slope_.nRows)
       {
@@ -69,6 +80,10 @@ Primula Config::configModel()
 
    model.syncValidIndices();
 
+   model.ReadLandCover(this->landCoverPath);
+   model.ReadSoilDepth(this->soilDepthPath);
+   model.ReadPhysProps(this->physPropPath);
+   
    return model;
 }
 

@@ -18,16 +18,17 @@ public:
       return this->defaultExtension;
    };
 
-   std::string landCoverPath;
-
 private:
    std::string slopePath;
    std::string twiPath;
    std::string soilTypePath;
-   std::string soilDepthPath;
    std::string landUsePath;
 
-   std::string defaultExtension = ".tif";
+   std::string landCoverPath;
+   std::string soilDepthPath;
+   std::string physPropPath;
+
+   std::string defaultExtension = ".asc";
 
    size_t num_landslides = 100;
    size_t seed           = 69420;

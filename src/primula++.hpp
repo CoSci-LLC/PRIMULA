@@ -14,6 +14,22 @@
 #include <landslide.hpp>
 #include <random>
 
+struct physProp 
+{
+   double minGamma;
+   double maxGamma;
+
+   double minPhi;
+   double maxPhi;
+
+   double minCohesion;
+   double maxCohesion;
+
+   double minKs;
+   double maxKs;
+};
+
+
 class Primula
 {
 public:
@@ -35,8 +51,9 @@ public:
    //==========================================================================
    void GenerateSoilProperties();
    void CalculateSafetyFactor();
-   void ReadSoilDataset(const std::string &soil_data, const std::string &root_data);
    void ReadLandCover(const std::string &landCover);
+   void ReadSoilDepth(const std::string &soilDepth);
+   void ReadPhysProps(const std::string &physProps);
 
    // ... Static Member Data ...
    static constexpr double gravity_        = 9.81;         // [m/s^2]
@@ -57,13 +74,11 @@ public:
    KiLib::Raster slope_;
    KiLib::Raster twi_;
    KiLib::Raster soil_type_;
-   KiLib::Raster soil_depth_;
    KiLib::Raster landuse;
+
    KiLib::Raster pr_failure_;
 
    std::vector<Landslide>           landslide_;
-   std::vector<int>                 soil_id_;
-   std::vector<std::vector<double>> z_;
 
    double veg_weight_ = 70.0;  // [kg/m2]
    double rainfall_   = 0.100; // [m/day]
@@ -88,14 +103,20 @@ public:
 
 private:
    std::unordered_map<double, std::pair<double, double>> landcover;
+   std::unordered_map<double, std::pair<double, double>> soilDepth;
 
-   std::vector<size_t> iteration_index;
+   std::unordered_map<double, physProp> physProps;
 
    std::vector<double> phi1;
    std::vector<double> phi2;
    std::vector<double> gamma1;
    std::vector<double> ks1;
    std::vector<double> ks2;
+
+   std::unordered_map<double, std::vector<double>> phi;
+   std::unordered_map<double, std::vector<double>> gamma;
+   std::unordered_map<double, std::vector<double>> ks;
+   std::unordered_map<double, std::vector<double>> cohesion;
 
    std::mt19937_64 engine; // Engine so our can be consistent
 
