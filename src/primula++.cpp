@@ -204,6 +204,8 @@ void Primula::CalculateSafetyFactor()
 
 void Primula::syncValidIndices()
 {
+   spdlog::info("Validating raster data");
+
    for (size_t i = 0; i < this->slope_.nData; i++)
    {
       if (this->slope_(i) == this->slope_.nodata_value)
