@@ -30,7 +30,7 @@ KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster 
 }
 
 KiLib::Raster Primula::MDSTab_v2(
-   const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
+   const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const KiLib::Raster &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
    KiLib::Raster FS = KiLib::Raster::nodataLike(this->slope_);
@@ -39,7 +39,7 @@ KiLib::Raster Primula::MDSTab_v2(
    for (size_t i : this->validIndices)
    {
       double SF = this->SFModel.ComputeSF(
-         phi(i), m(i), z(i), Crl(i), Crb(i), this->slope_(i), this->slope_(i), gamma_s, slide.width_, slide.length_);
+         phi(i), m(i), z(i), Crl(i), Crb(i), this->slope_(i), this->slope_(i), gamma_s(i), slide.width_, slide.length_);
 
       FS(i) = SF;
    }
@@ -156,6 +156,7 @@ void Primula::CalculateSafetyFactor()
       KiLib::Raster depth          = KiLib::Raster::zerosLike(this->slope_);
       KiLib::Raster crl            = KiLib::Raster::zerosLike(this->slope_);
       KiLib::Raster crb            = KiLib::Raster::zerosLike(this->slope_);
+      KiLib::Raster gammaRast      = KiLib::Raster::zerosLike(this->slope_);
 
       // go through each raster cell
       for (size_t j : this->validIndices)
@@ -164,7 +165,7 @@ void Primula::CalculateSafetyFactor()
          double phiV      = this->phi.at(this->soil_type_(j))[i];
          double ksV       = this->ks.at(this->soil_type_(j))[i];
          // double cohesionV = this->Cohesion[this->soil_type_(j)][i]; Currently unused!!!!!!!!!!!!!!!
-         // double gammaV    = this->gamma[this->soil_type_(j)][i]; Currently unused!!!!!!!!!!!!!!!
+         double gammaV    = this->gamma[this->soil_type_(j)][i];
 
          friction_angle(j) = phiV * M_PI / 180.0;
          permeability(j)   = ksV * M_PI / 180.0;
@@ -175,6 +176,8 @@ void Primula::CalculateSafetyFactor()
          auto &[minSD, maxSD] = this->soilDepth.at(this->soil_type_(j));
          depth(j)             = stats::runif(minSD, maxSD, this->engine);
 
+         gammaRast(j) = gammaV;
+
          if (depth(j) >= 0.5)
             crb(j) = 0;
          else
@@ -183,7 +186,7 @@ void Primula::CalculateSafetyFactor()
 
       auto m = CalcWetness(permeability, depth);
 
-      auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, this->gamma.at(1)[i], depth, crl, crb);
+      auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, gammaRast, depth, crl, crb);
       for (size_t i : this->validIndices)
       {
          if (FS(i) < 1 && FS(i) > 0)

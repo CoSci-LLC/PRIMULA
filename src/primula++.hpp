@@ -122,6 +122,6 @@ private:
 
    KiLib::Raster CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTab_v2(
-      const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const double &gamma_s,
+      const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const KiLib::Raster &gamma_s,
       const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
 };
