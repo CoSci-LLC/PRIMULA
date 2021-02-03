@@ -7,10 +7,10 @@
 // This file is part of PRIMULA++
 // ============================================================================
 
-#include <csv.hpp>
 #include <KiLib/Utils/Random.hpp>
 #include <chrono>
 #include <cmath>
+#include <csv.hpp>
 #include <primula++.hpp>
 #include <random>
 #include <spdlog/spdlog.h>
@@ -29,7 +29,7 @@ KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster 
    return W;
 }
 
-KiLib::Raster Primula::MDSTab_v2(
+KiLib::Raster Primula::MDSTAB(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const KiLib::Raster &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
@@ -39,7 +39,8 @@ KiLib::Raster Primula::MDSTab_v2(
    for (size_t i : this->validIndices)
    {
       double SF = this->SFModel.ComputeSF(
-         phi(i), m(i), z(i), Crl(i), Crb(i), this->slope_(i), this->slope_(i), gamma_s(i), slide.width_, slide.length_);
+         phi(i), m(i), z(i), Crl(i), Crb(i), this->slope_(i), this->slope_(i), gamma_s(i), slide.width_, slide.length_,
+         9.810);
 
       FS(i) = SF;
    }
@@ -95,8 +96,8 @@ void Primula::ReadPhysProps(const std::string &physProps)
 void Primula::GenerateSoilProperties()
 {
    spdlog::stopwatch sw;
-   
-   for (auto const& [soilID, prop] : this->physProps)
+
+   for (auto const &[soilID, prop] : this->physProps)
    {
       std::vector<double> tPhi      = KiLib::Random::runif(this->num_landslides, 0, 1, this->engine);
       std::vector<double> tGamma    = KiLib::Random::runif(this->num_landslides, 0, 1, this->engine);
@@ -107,8 +108,6 @@ void Primula::GenerateSoilProperties()
       tGamma    = stats::qunif(tGamma, prop.minGamma, prop.maxGamma);
       tKs       = stats::qunif(tKs, prop.minKs, prop.maxKs);
       tCohesion = stats::qunif(tCohesion, prop.minCohesion, prop.maxCohesion);
-
-      std::transform(tGamma.begin(), tGamma.end(), tGamma.begin(), [&](double v) -> double { return v*1000.0; });
 
       this->phi[soilID]      = tPhi;
       this->gamma[soilID]    = tGamma;
@@ -164,13 +163,13 @@ void Primula::CalculateSafetyFactor()
          // if soil 1 or 2, translate info to rasters
          double phiV      = this->phi.at(this->soil_type_(j))[i];
          double ksV       = this->ks.at(this->soil_type_(j))[i];
-         // double cohesionV = this->Cohesion[this->soil_type_(j)][i]; Currently unused!!!!!!!!!!!!!!!
+         double cohesionV = this->cohesion[this->soil_type_(j)][i];
          double gammaV    = this->gamma[this->soil_type_(j)][i];
 
          friction_angle(j) = phiV * M_PI / 180.0;
          permeability(j)   = ksV * M_PI / 180.0;
 
-         auto& [minLC, maxLC] = this->landcover.at(this->landuse(j));
+         auto &[minLC, maxLC] = this->landcover.at(this->landuse(j));
          crl(j)               = stats::runif(minLC, maxLC, this->engine);
 
          auto &[minSD, maxSD] = this->soilDepth.at(this->soil_type_(j));
@@ -178,20 +177,17 @@ void Primula::CalculateSafetyFactor()
 
          gammaRast(j) = gammaV;
 
-         if (depth(j) >= 0.5)
-            crb(j) = 0;
-         else
-            crb(j) = crl(j);
+         crb(j) = cohesionV;
       }
 
       auto m = CalcWetness(permeability, depth);
 
-      auto FS = MDSTab_v2(this->landslide_[i], friction_angle, m, gammaRast, depth, crl, crb);
+      auto FS = MDSTAB(this->landslide_[i], friction_angle, m, gammaRast, depth, crl, crb);
       for (size_t i : this->validIndices)
       {
-         if (FS(i) < 1 && FS(i) > 0)
+         if (FS(i) < 1)
          {
-            this->pr_failure_(i) += FS(i);
+            this->pr_failure_(i) += 1.0;
          }
       }
    }

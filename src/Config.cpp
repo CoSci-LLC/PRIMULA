@@ -59,10 +59,10 @@ Primula Config::configModel()
    Primula model(this->num_landslides, this->seed);
 
    spdlog::info("Loading Rasters");
-   model.twi_        = KiLib::Raster(this->twiPath);
-   model.slope_      = KiLib::Raster(this->slopePath);
-   model.soil_type_  = KiLib::Raster(this->soilTypePath);
-   model.landuse     = KiLib::Raster(this->landUsePath);
+   model.twi_       = KiLib::Raster(this->twiPath);
+   model.slope_     = KiLib::Raster(this->slopePath);
+   model.soil_type_ = KiLib::Raster(this->soilTypePath);
+   model.landuse    = KiLib::Raster(this->landUsePath);
 
    // Make sure raster dimension agree
    for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.landuse})
@@ -86,7 +86,7 @@ Primula Config::configModel()
    model.ReadLandCover(this->landCoverPath);
    model.ReadSoilDepth(this->soilDepthPath);
    model.ReadPhysProps(this->physPropPath);
-   
+
    spdlog::info("Done configuring model");
 
    return model;

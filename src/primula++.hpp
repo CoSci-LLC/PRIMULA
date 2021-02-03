@@ -14,7 +14,7 @@
 #include <landslide.hpp>
 #include <random>
 
-struct physProp 
+struct physProp
 {
    double minGamma;
    double maxGamma;
@@ -67,7 +67,7 @@ public:
    size_t num_landslides;
 
    // Model to calculate safety factor
-   KiLib::Stability::SafetyFactor::MDSTab SFModel;
+   KiLib::Stability::SafetyFactor::MDSTAB SFModel;
    // Model to wetness
    KiLib::Hydrology::TopModel hydroModel;
 
@@ -78,10 +78,10 @@ public:
 
    KiLib::Raster pr_failure_;
 
-   std::vector<Landslide>           landslide_;
+   std::vector<Landslide> landslide_;
 
    double veg_weight_ = 70.0;  // [kg/m2]
-   double rainfall_   = 0.100; // [m/day]
+   double rainfall_   = 0.160; // [m/day]
 
    // Normal distribution parameters for landslide area
    double area_mu_    = 2.017;          // [m^2]
@@ -107,12 +107,6 @@ private:
 
    std::unordered_map<double, physProp> physProps;
 
-   std::vector<double> phi1;
-   std::vector<double> phi2;
-   std::vector<double> gamma1;
-   std::vector<double> ks1;
-   std::vector<double> ks2;
-
    std::unordered_map<double, std::vector<double>> phi;
    std::unordered_map<double, std::vector<double>> gamma;
    std::unordered_map<double, std::vector<double>> ks;
@@ -121,7 +115,7 @@ private:
    std::mt19937_64 engine; // Engine so our can be consistent
 
    KiLib::Raster CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z);
-   KiLib::Raster MDSTab_v2(
+   KiLib::Raster MDSTAB(
       const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const KiLib::Raster &gamma_s,
       const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb);
 };
