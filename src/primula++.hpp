@@ -14,6 +14,7 @@
 #include <landslide.hpp>
 #include <random>
 
+// Structure to conveniently store properties for each soil
 struct physProp
 {
    double minGamma;
@@ -42,11 +43,6 @@ public:
    }
 
    //==========================================================================
-   // ... Public Accessor Functions ...
-   //==========================================================================
-
-
-   //==========================================================================
    // ... Public Member Functions ...
    //==========================================================================
    void GenerateSoilProperties();
@@ -54,14 +50,6 @@ public:
    void ReadLandCover(const std::string &landCover);
    void ReadSoilDepth(const std::string &soilDepth);
    void ReadPhysProps(const std::string &physProps);
-
-   // ... Static Member Data ...
-   static constexpr double gravity_        = 9.81;         // [m/s^2]
-   static constexpr double soil_density_   = 1834.8624;    // [kg/m^3] Schwarz M. R Code
-   static constexpr double transmissivity_ = 0.0002644655; // [m/s] Fixed for the moment. From R code
-   static constexpr double rain_intensity_ =
-      0.001 * 70 / 3600; // [m/s] >> Eventually should live outside of primula class <<
-
 
    // ... Member Data ...
    size_t num_landslides;
@@ -80,8 +68,7 @@ public:
 
    std::vector<Landslide> landslide_;
 
-   double veg_weight_ = 70.0;  // [kg/m2]
-   double rainfall_   = 0.160; // [m/day]
+   double rainfall_ = 0.160; // [m/day]
 
    // Normal distribution parameters for landslide area
    double area_mu_    = 2.017;          // [m^2]
@@ -91,10 +78,10 @@ public:
    double l2w_mu_    = 0.1528;         // [dimensionless]
    double l2w_sigma_ = sqrt(0.037396); // [dimensionless]
 
+   // Looks at all rasters and finds the indices where ALL rasters have valid data (i.e. not nodata_value), stores in a
+   // vector called validIndices
    std::vector<size_t> validIndices;
-   // Looks at all rasters and finds the indices where ALL rasters have valid data, stores in a vector called
-   // validIndices
-   void syncValidIndices();
+   void                syncValidIndices();
 
 
    //==========================================================================
@@ -112,7 +99,7 @@ private:
    std::unordered_map<double, std::vector<double>> ks;
    std::unordered_map<double, std::vector<double>> cohesion;
 
-   std::mt19937_64 engine; // Engine so our can be consistent
+   std::mt19937_64 engine; // RNG engine so our results can be consistent
 
    KiLib::Raster CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z);
    KiLib::Raster MDSTAB(

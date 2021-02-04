@@ -47,7 +47,13 @@ Config::Config(int argc, char **argv)
       exit(EXIT_FAILURE);
    }
 
+   // Output raster name
+   this->rastOutPath = (fs::path(this->outputPath) / fs::path("prob_failure")).string() + this->extension();
+
+   // Create output dir
    fs::create_directories(this->outputPath);
+
+   // Output configuration
    std::ofstream outFile = std::ofstream(fs::path(this->outputPath) / fs::path("config.toml"));
    outFile << parser.config_to_str(true, true);
    outFile.close();

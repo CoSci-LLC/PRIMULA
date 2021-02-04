@@ -30,8 +30,10 @@ private:
 
    std::string defaultExtension = ".asc";
 
+   std::string rastOutPath;
+
    size_t num_landslides = 100;
-   size_t seed           = 69420;
+   size_t seed           = 333;
 
    void dumpConfigFile(std::string path);
 
