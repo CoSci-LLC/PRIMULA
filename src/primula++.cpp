@@ -192,11 +192,15 @@ void Primula::CalculateSafetyFactor()
       auto m = CalcWetness(permeability, depth);
 
       auto FS = MDSTAB(this->landslide_[i], friction_angle, m, gammaRast, depth, crl, crb);
-      for (size_t i : this->validIndices)
+      // Makre sure only one thread is updating the probability of failure at a time
+      #pragma omp critical
       {
-         if (FS(i) < 1)
+         for (size_t i : this->validIndices)
          {
-            this->pr_failure_(i) += 1.0;
+            if (FS(i) < 1)
+            {
+               this->pr_failure_(i) += 1.0;
+            }
          }
       }
    }

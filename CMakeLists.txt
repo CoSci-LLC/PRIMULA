@@ -38,4 +38,4 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(PRIMULA PRIVATE  /std:c++latest /EHsc)
 endif()
 
-target_link_libraries(PRIMULA KiLib CLI11 tiff csv OpenMP::OpenMP_CXX)
+target_link_libraries(PRIMULA KiLib CLI11 tiff csv)
