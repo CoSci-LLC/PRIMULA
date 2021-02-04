@@ -11,12 +11,12 @@
 #include <chrono>
 #include <cmath>
 #include <csv.hpp>
+#include <limits>
 #include <primula++.hpp>
 #include <random>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
-#include <limits>
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
@@ -151,7 +151,7 @@ void Primula::CalculateSafetyFactor()
    std::uniform_int_distribution<size_t> dist{1, std::numeric_limits<std::size_t>::max()};
 
    std::vector<size_t> seeds(this->num_landslides);
-   std::generate(std::begin(seeds), std::end(seeds), [&](){return dist(this->engine);});
+   std::generate(std::begin(seeds), std::end(seeds), [&]() { return dist(this->engine); });
 
    #pragma omp parallel for
    for (size_t i = 0; i < this->num_landslides; i++)
