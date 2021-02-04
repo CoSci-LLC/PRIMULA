@@ -11,6 +11,8 @@ include(CMake/KiLib.cmake.in)
 include(CMake/CLI11.cmake.in)
 include(CMake/CSV.cmake.in)
 
+find_package(OpenMP)
+
 add_executable(
     PRIMULA 
     src/main.cpp 
@@ -36,4 +38,4 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(PRIMULA PRIVATE  /std:c++latest /EHsc)
 endif()
 
-target_link_libraries(PRIMULA KiLib CLI11 tiff csv)
+target_link_libraries(PRIMULA KiLib CLI11 tiff csv OpenMP::OpenMP_CXX)

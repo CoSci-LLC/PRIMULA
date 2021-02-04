@@ -16,6 +16,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
+#include <limits>
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
@@ -147,8 +148,16 @@ void Primula::CalculateSafetyFactor()
       this->pr_failure_(i) = 0.0;
    }
 
-   for (unsigned int i = 0; i < num_landslides; i++)
+   std::uniform_int_distribution<size_t> dist{1, std::numeric_limits<std::size_t>::max()};
+
+   std::vector<size_t> seeds(this->num_landslides);
+   std::generate(std::begin(seeds), std::end(seeds), [&](){return dist(this->engine);});
+
+   #pragma omp parallel for
+   for (size_t i = 0; i < this->num_landslides; i++)
    {
+      std::mt19937_64 slideEngine(seeds[i]);
+
       spdlog::info("Landslide {}", i);
       KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->slope_);
       KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->slope_);
@@ -170,10 +179,10 @@ void Primula::CalculateSafetyFactor()
          permeability(j)   = ksV * M_PI / 180.0;
 
          auto &[minLC, maxLC] = this->landcover.at(this->landuse(j));
-         crl(j)               = stats::runif(minLC, maxLC, this->engine);
+         crl(j)               = stats::runif(minLC, maxLC, slideEngine);
 
          auto &[minSD, maxSD] = this->soilDepth.at(this->soil_type_(j));
-         depth(j)             = stats::runif(minSD, maxSD, this->engine);
+         depth(j)             = stats::runif(minSD, maxSD, slideEngine);
 
          gammaRast(j) = gammaV;
 
