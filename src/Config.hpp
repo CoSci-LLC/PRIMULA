@@ -28,7 +28,7 @@ private:
    std::string soilDepthPath;
    std::string physPropPath;
 
-   std::string defaultExtension = ".asc";
+   std::string defaultExtension = ".tif";
 
    std::string rastOutPath;
 
