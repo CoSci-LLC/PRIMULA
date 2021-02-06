@@ -169,7 +169,6 @@ void Primula::CalculateSafetyFactor()
       // go through each raster cell
       for (size_t j : this->validIndices)
       {
-         // if soil 1 or 2, translate info to rasters
          double phiV      = this->phi.at(this->soil_type_(j))[i];
          double ksV       = this->ks.at(this->soil_type_(j))[i];
          double cohesionV = this->cohesion[this->soil_type_(j)][i];

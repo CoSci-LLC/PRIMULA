@@ -37,5 +37,5 @@ private:
 
    void dumpConfigFile(std::string path);
 
-   CLI::App parser{"PRIMULA: Code that does stuff."};
+   CLI::App parser{"PRIMULA++: A C++ version of PRobabilistic MUltidimensional shallow Landslide Analysis"};
 };
