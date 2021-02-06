@@ -22,15 +22,20 @@ private:
    std::string slopePath;
    std::string twiPath;
    std::string soilTypePath;
+   std::string landUsePath;
+
+   std::string landCoverPath;
    std::string soilDepthPath;
-   std::string dusafPath;
+   std::string physPropPath;
 
    std::string defaultExtension = ".tif";
 
+   std::string rastOutPath;
+
    size_t num_landslides = 100;
-   size_t seed           = 69420;
+   size_t seed           = 333;
 
    void dumpConfigFile(std::string path);
 
-   CLI::App parser{"PRIMULA: Code that does stuff."};
+   CLI::App parser{"PRIMULA++: A C++ version of PRobabilistic MUltidimensional shallow Landslide Analysis"};
 };

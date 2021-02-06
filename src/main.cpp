@@ -18,7 +18,6 @@ int main(int argc, char **argv)
 
    Primula model = config.configModel();
 
-   model.ReadSoilDataset("../tests/malonno/Pedologia_25k_MALONNO.csv", "../tests/malonno/RootReinforcement.csv");
    model.GenerateSoilProperties();
    model.CalculateSafetyFactor();
 
