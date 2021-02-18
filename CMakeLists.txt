@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.9)
-project (PRIMULA VERSION 1.0.0 LANGUAGES CXX)
+project (PRIMULA VERSION 1.0.1 LANGUAGES CXX)
 
 # Locate headers
 include_directories(src)
