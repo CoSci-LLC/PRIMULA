@@ -84,7 +84,7 @@ public:
 
    std::vector<Landslide> landslide_;
 
-   double rainfall_ = 0.160; // [m/day]
+   double rainfall_; // [m/day]
 
    // Normal distribution parameters for landslide area
    double area_mu_    = 2.017;          // [m^2]

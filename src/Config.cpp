@@ -49,6 +49,8 @@ Config::Config(int argc, char **argv)
 
    parser.add_option("--outputPath",      this->outputPath,       "Path to output directory")->required();
 
+   parser.add_option("--rainfall",        this->rainfall_,        "Rainfall in meters/day", true);
+
    parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters", true);
    parser.add_option("--seed",            this->seed,             "Seed for RNG", true);
    parser.add_option("--numLandslides",   this->num_landslides,   "The number of landslides to simulate", true);
@@ -82,6 +84,7 @@ Primula Config::configModel()
 {
    spdlog::info("Configuring model");
    Primula model(this->num_landslides, this->seed);
+   model.rainfall_ = this->rainfall_;
 
    spdlog::info("Loading Rasters");
    model.twi_       = KiLib::Raster(this->twiPath);

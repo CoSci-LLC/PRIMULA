@@ -51,6 +51,8 @@ private:
 
    std::string rastOutPath;
 
+   double rainfall_ = 0.160; // [m/day]
+
    size_t num_landslides = 100;
    size_t seed           = 333;
 
