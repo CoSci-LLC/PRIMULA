@@ -186,7 +186,7 @@ void Primula::CalculateSafetyFactor()
          double gammaV    = this->gamma[this->soil_type_(j)][i];
 
          friction_angle(j) = phiV * M_PI / 180.0;
-         permeability(j)   = ksV * M_PI / 180.0;
+         permeability(j)   = ksV;
 
          auto &[minLC, maxLC] = this->landcover.at(this->landuse(j));
          crl(j)               = stats::runif(minLC, maxLC, slideEngine);
