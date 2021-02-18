@@ -62,6 +62,11 @@ public:
    void ReadSoilDepth(const std::string &soilDepth);
    void ReadPhysProps(const std::string &physProps);
 
+   // Looks at all rasters and finds the indices where ALL rasters have valid data (i.e. not nodata_value), stores in a
+   // vector called validIndices
+   // Ensures all necessary data has been provided
+   void validateData();
+
    // ... Member Data ...
    size_t num_landslides;
 
@@ -89,10 +94,7 @@ public:
    double l2w_mu_    = 0.1528;         // [dimensionless]
    double l2w_sigma_ = sqrt(0.037396); // [dimensionless]
 
-   // Looks at all rasters and finds the indices where ALL rasters have valid data (i.e. not nodata_value), stores in a
-   // vector called validIndices
    std::vector<size_t> validIndices;
-   void                syncValidIndices();
 
 
    //==========================================================================

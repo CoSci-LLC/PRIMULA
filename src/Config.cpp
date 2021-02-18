@@ -105,12 +105,12 @@ Primula Config::configModel()
       }
    }
 
-   model.syncValidIndices();
-
    spdlog::info("Reading CSVs");
    model.ReadLandCover(this->landCoverPath);
    model.ReadSoilDepth(this->soilDepthPath);
    model.ReadPhysProps(this->physPropPath);
+   
+   model.validateData();
 
    spdlog::info("Done configuring model");
 

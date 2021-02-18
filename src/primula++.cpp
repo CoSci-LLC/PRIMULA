@@ -27,6 +27,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
+#include <set>
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
@@ -223,10 +224,9 @@ void Primula::CalculateSafetyFactor()
    spdlog::info("Landslide generation elapsed time: {}", sw);
 }
 
-void Primula::syncValidIndices()
+void Primula::validateData()
 {
-   spdlog::info("Validating raster data");
-
+   spdlog::info("Finding populated indices in raster data");
    for (size_t i = 0; i < this->slope_.nData; i++)
    {
       if (this->slope_(i) == this->slope_.nodata_value)
@@ -240,8 +240,20 @@ void Primula::syncValidIndices()
 
       this->validIndices.push_back(i);
    }
-
    spdlog::info(
       "{} / {} Raster indices have valid data. Only computing on valid data.", this->validIndices.size(),
       this->slope_.nData);
+
+   spdlog::info("Validating landcover data");
+   std::set<size_t> missingKeys;
+   for (size_t i : this->validIndices) {
+      if (this->landcover.count(this->landuse(i)) == 0) {
+         missingKeys.insert(this->landuse(i));
+      }
+   }
+   if (missingKeys.size() > 0) {
+      spdlog::error("Landuse raster contains keys [{}] which are absent from land cover csv file.",fmt::join(missingKeys, ", "));
+      exit(EXIT_FAILURE);
+   }
+
 }
