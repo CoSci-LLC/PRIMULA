@@ -1,5 +1,5 @@
 # PRIMULA
-#### Version v1.0
+#### Version v1.0.1
 *A C++ version of PRobabilistic MUltidimensional shallow Landslide Analysis*
 
 ## Dependencies
