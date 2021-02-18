@@ -256,4 +256,16 @@ void Primula::validateData()
       exit(EXIT_FAILURE);
    }
 
+   spdlog::info("Validating soil depth data");
+   missingKeys.clear();
+   for (size_t i : this->validIndices) {
+      if (this->soilDepth.count(this->soil_type_(i)) == 0) {
+         missingKeys.insert(this->soil_type_(i));
+      }
+   }
+   if (missingKeys.size() > 0) {
+      spdlog::error("Soil type raster contains keys [{}] which are absent from soil depth csv file.",fmt::join(missingKeys, ", "));
+      exit(EXIT_FAILURE);
+   }
+
 }
