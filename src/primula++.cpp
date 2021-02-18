@@ -1,21 +1,21 @@
 /**
  *  Copyright (c) 2020-2021 CoSci LLC, USA <software@cosci-llc.com>
- *  
+ *
  *  This file is part of PRIMULA.
- *  
+ *
  *  PRIMULA is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  PRIMULA is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with PRIMULA.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include <KiLib/Utils/Random.hpp>
 #include <chrono>
@@ -24,10 +24,10 @@
 #include <limits>
 #include <primula++.hpp>
 #include <random>
+#include <set>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
-#include <set>
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
@@ -246,26 +246,34 @@ void Primula::validateData()
 
    spdlog::info("Validating landcover data");
    std::set<size_t> missingKeys;
-   for (size_t i : this->validIndices) {
-      if (this->landcover.count(this->landuse(i)) == 0) {
+   for (size_t i : this->validIndices)
+   {
+      if (this->landcover.count(this->landuse(i)) == 0)
+      {
          missingKeys.insert(this->landuse(i));
       }
    }
-   if (missingKeys.size() > 0) {
-      spdlog::error("Landuse raster contains keys [{}] which are absent from land cover csv file.",fmt::join(missingKeys, ", "));
+   if (missingKeys.size() > 0)
+   {
+      spdlog::error(
+         "Landuse raster contains keys [{}] which are absent from land cover csv file.", fmt::join(missingKeys, ", "));
       exit(EXIT_FAILURE);
    }
 
    spdlog::info("Validating soil depth data");
    missingKeys.clear();
-   for (size_t i : this->validIndices) {
-      if (this->soilDepth.count(this->soil_type_(i)) == 0) {
+   for (size_t i : this->validIndices)
+   {
+      if (this->soilDepth.count(this->soil_type_(i)) == 0)
+      {
          missingKeys.insert(this->soil_type_(i));
       }
    }
-   if (missingKeys.size() > 0) {
-      spdlog::error("Soil type raster contains keys [{}] which are absent from soil depth csv file.",fmt::join(missingKeys, ", "));
+   if (missingKeys.size() > 0)
+   {
+      spdlog::error(
+         "Soil type raster contains keys [{}] which are absent from soil depth csv file.",
+         fmt::join(missingKeys, ", "));
       exit(EXIT_FAILURE);
    }
-
 }
