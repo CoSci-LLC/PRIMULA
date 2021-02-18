@@ -1,21 +1,21 @@
 /**
  *  Copyright (c) 2020-2021 CoSci LLC, USA <software@cosci-llc.com>
- *  
+ *
  *  This file is part of PRIMULA.
- *  
+ *
  *  PRIMULA is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  PRIMULA is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with PRIMULA.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include <KiLib/Utils/Random.hpp>
 #include <chrono>
@@ -24,6 +24,7 @@
 #include <limits>
 #include <primula++.hpp>
 #include <random>
+#include <set>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 #include <stats.hpp>
@@ -185,7 +186,7 @@ void Primula::CalculateSafetyFactor()
          double gammaV    = this->gamma[this->soil_type_(j)][i];
 
          friction_angle(j) = phiV * M_PI / 180.0;
-         permeability(j)   = ksV * M_PI / 180.0;
+         permeability(j)   = ksV;
 
          auto &[minLC, maxLC] = this->landcover.at(this->landuse(j));
          crl(j)               = stats::runif(minLC, maxLC, slideEngine);
@@ -223,10 +224,9 @@ void Primula::CalculateSafetyFactor()
    spdlog::info("Landslide generation elapsed time: {}", sw);
 }
 
-void Primula::syncValidIndices()
+void Primula::validateData()
 {
-   spdlog::info("Validating raster data");
-
+   spdlog::info("Finding populated indices in raster data");
    for (size_t i = 0; i < this->slope_.nData; i++)
    {
       if (this->slope_(i) == this->slope_.nodata_value)
@@ -240,8 +240,40 @@ void Primula::syncValidIndices()
 
       this->validIndices.push_back(i);
    }
-
    spdlog::info(
       "{} / {} Raster indices have valid data. Only computing on valid data.", this->validIndices.size(),
       this->slope_.nData);
+
+   spdlog::info("Validating landcover data");
+   std::set<size_t> missingKeys;
+   for (size_t i : this->validIndices)
+   {
+      if (this->landcover.count(this->landuse(i)) == 0)
+      {
+         missingKeys.insert(this->landuse(i));
+      }
+   }
+   if (missingKeys.size() > 0)
+   {
+      spdlog::error(
+         "Landuse raster contains keys [{}] which are absent from land cover csv file.", fmt::join(missingKeys, ", "));
+      exit(EXIT_FAILURE);
+   }
+
+   spdlog::info("Validating soil depth data");
+   missingKeys.clear();
+   for (size_t i : this->validIndices)
+   {
+      if (this->soilDepth.count(this->soil_type_(i)) == 0)
+      {
+         missingKeys.insert(this->soil_type_(i));
+      }
+   }
+   if (missingKeys.size() > 0)
+   {
+      spdlog::error(
+         "Soil type raster contains keys [{}] which are absent from soil depth csv file.",
+         fmt::join(missingKeys, ", "));
+      exit(EXIT_FAILURE);
+   }
 }

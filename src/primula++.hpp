@@ -1,21 +1,21 @@
 /**
  *  Copyright (c) 2020-2021 CoSci LLC, USA <software@cosci-llc.com>
- *  
+ *
  *  This file is part of PRIMULA.
- *  
+ *
  *  PRIMULA is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  PRIMULA is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with PRIMULA.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #pragma once
 
@@ -62,6 +62,11 @@ public:
    void ReadSoilDepth(const std::string &soilDepth);
    void ReadPhysProps(const std::string &physProps);
 
+   // Looks at all rasters and finds the indices where ALL rasters have valid data (i.e. not nodata_value), stores in a
+   // vector called validIndices
+   // Ensures all necessary data has been provided
+   void validateData();
+
    // ... Member Data ...
    size_t num_landslides;
 
@@ -79,7 +84,7 @@ public:
 
    std::vector<Landslide> landslide_;
 
-   double rainfall_ = 0.160; // [m/day]
+   double rainfall_; // [m/day]
 
    // Normal distribution parameters for landslide area
    double area_mu_    = 2.017;          // [m^2]
@@ -89,10 +94,7 @@ public:
    double l2w_mu_    = 0.1528;         // [dimensionless]
    double l2w_sigma_ = sqrt(0.037396); // [dimensionless]
 
-   // Looks at all rasters and finds the indices where ALL rasters have valid data (i.e. not nodata_value), stores in a
-   // vector called validIndices
    std::vector<size_t> validIndices;
-   void                syncValidIndices();
 
 
    //==========================================================================
