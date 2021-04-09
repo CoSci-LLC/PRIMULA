@@ -52,7 +52,7 @@ KiLib::Raster Primula::MDSTAB(
    {
       double SF = this->SFModel.ComputeSF(
          phi(i), m(i), z(i), Crl(i), Crb(i), this->slope_(i), this->slope_(i), gamma_s(i), slide.width_, slide.length_,
-         9.810);
+         9.810, true);
 
       FS(i) = SF;
    }

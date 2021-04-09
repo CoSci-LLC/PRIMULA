@@ -54,6 +54,7 @@ Config::Config(int argc, char **argv)
    parser.add_option("--outputExtension", this->defaultExtension, "File extension for output rasters", true);
    parser.add_option("--seed",            this->seed,             "Seed for RNG", true);
    parser.add_option("--numLandslides",   this->num_landslides,   "The number of landslides to simulate", true);
+   parser.add_option("--calcFrd",         this->calcFrd,          "Include slope-parallel passive force on downslope margin", true);
    // clang-format on
 
    try
