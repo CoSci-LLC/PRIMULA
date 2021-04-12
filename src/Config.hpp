@@ -56,7 +56,9 @@ private:
    size_t num_landslides = 100;
    size_t seed           = 333;
 
+   bool calcFrd = true; //Default value
+
    void dumpConfigFile(std::string path);
 
-   CLI::App parser{"PRIMULA++: A C++ version of PRobabilistic MUltidimensional shallow Landslide Analysis"};
+   CLI::App parser{"PRIMULA++: A C++ version of PRobabilistIc MUltidimensional shallow Landslide Analysis"};
 };
