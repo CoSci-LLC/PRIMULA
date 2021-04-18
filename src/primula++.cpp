@@ -35,7 +35,7 @@ KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster 
 
    for (size_t i : this->validIndices)
    {
-      W(i) = this->hydroModel.ComputeWetness(rainfall_, ks(i), z(i), slope_(i), twi_(i));
+      W(i) = this->hydroModel.ComputeWetness(0.9 * rainfall_, ks(i), z(i), slope_(i), std::log(twi_(i)));
    }
 
    return W;
