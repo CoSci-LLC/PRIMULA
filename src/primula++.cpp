@@ -31,7 +31,7 @@
 
 KiLib::Raster Primula::CalcWetness(const KiLib::Raster &ks, const KiLib::Raster &z)
 {
-   KiLib::Raster W = KiLib::Raster::nodataLike(this->slope_);
+   KiLib::Raster W = KiLib::Raster::fillLike(this->slope_, this->slope_.nodata_value, true);
 
    for (size_t i : this->validIndices)
    {
@@ -45,7 +45,7 @@ KiLib::Raster Primula::MDSTAB(
    const Landslide &slide, const KiLib::Raster &phi, const KiLib::Raster &m, const KiLib::Raster &gamma_s,
    const KiLib::Raster &z, const KiLib::Raster &Crl, const KiLib::Raster &Crb)
 {
-   KiLib::Raster FS = KiLib::Raster::nodataLike(this->slope_);
+   KiLib::Raster FS = KiLib::Raster::fillLike(this->slope_, this->slope_.nodata_value, true);
 
    // calculate factor of safety for each raster cell
    for (size_t i : this->validIndices)
@@ -152,12 +152,7 @@ void Primula::CalculateSafetyFactor()
    spdlog::stopwatch sw;
 
    this->slope_.nodata_value = -9999;
-   this->pr_failure_         = KiLib::Raster::nodataLike(this->slope_);
-
-   for (size_t i : this->validIndices)
-   {
-      this->pr_failure_(i) = 0.0;
-   }
+   this->pr_failure_         = KiLib::Raster::fillLike(this->slope_, 0.0, true);
 
    std::uniform_int_distribution<size_t> dist{1, std::numeric_limits<std::size_t>::max()};
 
@@ -170,12 +165,12 @@ void Primula::CalculateSafetyFactor()
       std::mt19937_64 slideEngine(seeds[i]);
 
       spdlog::info("Landslide {}", i);
-      KiLib::Raster friction_angle = KiLib::Raster::zerosLike(this->slope_);
-      KiLib::Raster permeability   = KiLib::Raster::zerosLike(this->slope_);
-      KiLib::Raster depth          = KiLib::Raster::zerosLike(this->slope_);
-      KiLib::Raster crl            = KiLib::Raster::zerosLike(this->slope_);
-      KiLib::Raster crb            = KiLib::Raster::zerosLike(this->slope_);
-      KiLib::Raster gammaRast      = KiLib::Raster::zerosLike(this->slope_);
+      KiLib::Raster friction_angle = KiLib::Raster::fillLike(this->slope_, 0.0, true);
+      KiLib::Raster permeability   = KiLib::Raster::fillLike(this->slope_, 0.0, true);
+      KiLib::Raster depth          = KiLib::Raster::fillLike(this->slope_, 0.0, true);
+      KiLib::Raster crl            = KiLib::Raster::fillLike(this->slope_, 0.0, true);
+      KiLib::Raster crb            = KiLib::Raster::fillLike(this->slope_, 0.0, true);
+      KiLib::Raster gammaRast      = KiLib::Raster::fillLike(this->slope_, 0.0, true);
 
       // go through each raster cell
       for (size_t j : this->validIndices)
@@ -227,19 +222,7 @@ void Primula::CalculateSafetyFactor()
 void Primula::validateData()
 {
    spdlog::info("Finding populated indices in raster data");
-   for (size_t i = 0; i < this->slope_.nData; i++)
-   {
-      if (this->slope_(i) == this->slope_.nodata_value)
-         continue;
-      if (this->twi_(i) == this->twi_.nodata_value)
-         continue;
-      if (this->soil_type_(i) == this->soil_type_.nodata_value)
-         continue;
-      if (this->landuse(i) == this->landuse.nodata_value)
-         continue;
-
-      this->validIndices.push_back(i);
-   }
+   this->validIndices = KiLib::Raster::getValidIndices({&this->slope_, &this->twi_, &this->soil_type_, &this->landuse});
    spdlog::info(
       "{} / {} Raster indices have valid data. Only computing on valid data.", this->validIndices.size(),
       this->slope_.nData);
