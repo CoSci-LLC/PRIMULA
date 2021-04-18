@@ -152,7 +152,10 @@ void Primula::CalculateSafetyFactor()
    spdlog::stopwatch sw;
 
    this->slope_.nodata_value = -9999;
-   this->pr_failure_         = KiLib::Raster::fillLike(this->slope_, 0.0, true);
+   this->pr_failure_         = KiLib::Raster::fillLike(this->slope_, this->slope_.nodata_value, true);
+   for (auto j : this->validIndices) {
+      this->pr_failure_(j) = 0.0;
+   }
 
    std::uniform_int_distribution<size_t> dist{1, std::numeric_limits<std::size_t>::max()};
 
