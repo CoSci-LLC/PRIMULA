@@ -93,21 +93,7 @@ Primula Config::configModel()
    model.soil_type_ = KiLib::Raster(this->soilTypePath);
    model.landuse    = KiLib::Raster(this->landUsePath);
 
-   // Make sure raster dimension agree
-   for (const auto rast : {&model.slope_, &model.twi_, &model.soil_type_, &model.landuse})
-   {
-      if (rast->nRows != model.slope_.nRows)
-      {
-         spdlog::error("Raster row sizes dont agree!");
-         exit(EXIT_FAILURE);
-      }
-
-      if (rast->nCols != model.slope_.nCols)
-      {
-         spdlog::error("Raster col sizes dont agree!");
-         exit(EXIT_FAILURE);
-      }
-   }
+   KiLib::Raster::assertAgreeDim({&model.slope_, &model.twi_, &model.soil_type_, &model.landuse});
 
    spdlog::info("Reading CSVs");
    model.ReadLandCover(this->landCoverPath);
